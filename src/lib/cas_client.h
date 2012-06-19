@@ -27,6 +27,18 @@
 #ifndef __LOCASBEROS_CAS_CLIENT__
 #define __LOCASBEROS_CAS_CLIENT__
 
+#define CATCH(t, h) { if (t) goto h; }
 
+typedef struct casclient_t casclient_t;
+
+/*! Initializes a new casclient_t for using a given endpoint. This is
+ *  the dual function of casclient_destroy.
+ */
+casclient_t *casclient_init(const char *endpoint);
+
+/*! Free memory used by a given casclient_t structure. This is the
+ *  dual function of casclient_init.
+ */
+void casclient_destroy(casclient_t *);
 
 #endif

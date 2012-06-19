@@ -24,5 +24,44 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <stdlib.h>
+#include <string.h>
 #include "cas_client.h"
 
+struct casclient_t
+{
+  /* The cas endpoint to use */
+  char *endpoint;
+
+  /* The timeout in seconds */
+  int timeout;
+
+};
+
+
+casclient_t *casclient_init(const char *endpoint)
+{
+  casclient_t *p = malloc(sizeof(casclient_t));
+  p->endpoint = NULL;
+  p->timeout  = 60;
+  CATCH(p==NULL, error_handler);
+
+  p->endpoint = malloc(sizeof(char) * (strlen(endpoint) + 1));
+  CATCH(p->endpoint==NULL, error_handler);
+  strcpy(p->endpoint, endpoint);
+
+  return(p);
+
+ error_handler:
+  casclient_destroy(p);
+  return(NULL);
+}
+
+void casclient_destroy(casclient_t *p)
+{
+  if (p == NULL)
+    return;
+  if (p->endpoint != NULL)
+    free(p->endpoint);
+  free(p);
+}
