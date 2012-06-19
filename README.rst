@@ -1,11 +1,11 @@
 LOCASBEROS
 ==========
 
-...
+A apache/nginx authentication module.
 
 
-Idea
-----
+Configuration Directives (sketch)
+---------------------------------
 
 * CasEndpoint
 * CasService
