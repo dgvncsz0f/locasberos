@@ -1,4 +1,6 @@
 // Copyright (c) 2012 dsouza
+// Copyright (c) 2012 pothix
+// Copyright (c) 2012 morellon
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without
@@ -26,6 +28,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "alloca.h"
 #include "cas_client.h"
 
 struct casclient_t
@@ -36,17 +39,28 @@ struct casclient_t
   /* The timeout in seconds */
   int timeout;
 
+  /* The memory allocation algorithm */
+  alloca_t alloca;
 };
 
 
 casclient_t *casclient_init(const char *endpoint)
 {
-  casclient_t *p = malloc(sizeof(casclient_t));
-  p->endpoint = NULL;
-  p->timeout  = 60;
+  alloca_t alloca;
+  alloca_std(&alloca);
+  return(casclient_init2(endpoint, &alloca));
+}
+
+casclient_t *casclient_init2(const char *endpoint, const alloca_t *ptr)
+{
+  casclient_t *p = ptr->alloca_f(sizeof(casclient_t));
+  p->endpoint         = NULL;
+  p->timeout          = 60;
+  p->alloca.alloca_f  = ptr->alloca_f;
+  p->alloca.destroy_f = ptr->destroy_f;
   CATCH(p==NULL, error_handler);
 
-  p->endpoint = malloc(sizeof(char) * (strlen(endpoint) + 1));
+  p->endpoint = ptr->alloca_f(sizeof(char) * (strlen(endpoint) + 1));
   CATCH(p->endpoint==NULL, error_handler);
   strcpy(p->endpoint, endpoint);
 
@@ -61,7 +75,6 @@ void casclient_destroy(casclient_t *p)
 {
   if (p == NULL)
     return;
-  if (p->endpoint != NULL)
-    free(p->endpoint);
-  free(p);
+  p->alloca.destroy_f(p->endpoint);
+  p->alloca.destroy_f(p);
 }

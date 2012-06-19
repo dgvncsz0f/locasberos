@@ -26,30 +26,11 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef __LOCASBEROS_CAS_CLIENT__
-#define __LOCASBEROS_CAS_CLIENT__
+#include <stdlib.h>
+#include "alloca.h"
 
-#define CATCH(t, h) { if (t) goto h; }
-
-typedef struct casclient_t casclient_t;
-
-/*! Initializes a new casclient_t for using a given endpoint. This is
- *  the dual function of casclient_destroy.
- *
- *  This in fact a wrapper around casclient_init2 using system's
- *  standard memory allocation.
- */
-casclient_t *casclient_init(const char *endpoint);
-
-/*! Initializes a new casclient_t for using a given endpoint and a
- *  custom memory management. This is the dual function of
- *  casclient_destroy.
- */
-casclient_t *casclient_init2(const char *endpoint, const alloca_t *alloca);
-
-/*! Free memory used by a given casclient_t structure. This is the
- *  dual function of casclient_init.
- */
-void casclient_destroy(casclient_t *);
-
-#endif
+void alloca_std(alloca_t *ptr)
+{
+  ptr->alloca_f  = malloc;
+  ptr->destroy_f = free;
+}

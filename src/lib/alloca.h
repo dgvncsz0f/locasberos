@@ -26,30 +26,32 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef __LOCASBEROS_CAS_CLIENT__
-#define __LOCASBEROS_CAS_CLIENT__
+#ifndef __LOCASBEROS_ALLOCA__
+#define __LOCASBEROS_ALLOCA__
 
-#define CATCH(t, h) { if (t) goto h; }
+typedef struct
+{
+  /*! This function should allocate size bytes and return a pointer to
+   *  the allocated memory.
+   *
+   * \param size How many bytes to allocate;
+   * \return The pointer to the allocated memory. It may also be NULL,
+   *         which represents an error;
+   */
+  void *(*alloca_f)(size_t size);
 
-typedef struct casclient_t casclient_t;
+  /*! Frees memory used by a given pointer, which was allocated by
+   *  alloca_f. It is considered an error to invoke this function
+   *  twice or more.
+   *
+   * \param ptr Pointer to a memory allocated by alloca_f (might be NULL);
+   */
+  void (*destroy_f)(void *ptr);
 
-/*! Initializes a new casclient_t for using a given endpoint. This is
- *  the dual function of casclient_destroy.
- *
- *  This in fact a wrapper around casclient_init2 using system's
- *  standard memory allocation.
+} alloca_t;
+
+/*! Fill up the pointer with the system's standard memory allocation.
  */
-casclient_t *casclient_init(const char *endpoint);
-
-/*! Initializes a new casclient_t for using a given endpoint and a
- *  custom memory management. This is the dual function of
- *  casclient_destroy.
- */
-casclient_t *casclient_init2(const char *endpoint, const alloca_t *alloca);
-
-/*! Free memory used by a given casclient_t structure. This is the
- *  dual function of casclient_init.
- */
-void casclient_destroy(casclient_t *);
+void alloca_std(alloca_t *ptr);
 
 #endif
