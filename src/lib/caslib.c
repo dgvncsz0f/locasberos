@@ -32,9 +32,9 @@
 #include <string.h>
 #include "utilities.h"
 #include "alloca.h"
-#include "cas_client.h"
+#include "caslib.h"
 
-struct casclient_t {
+struct caslib_t {
   /* The cas endpoint to use */
   char *endpoint;
 
@@ -46,14 +46,14 @@ struct casclient_t {
 };
 
 
-casclient_t *casclient_init(const char *endpoint) {
+caslib_t *caslib_init(const char *endpoint) {
   alloca_t alloca;
   alloca_std(&alloca);
-  return(casclient_init_with(endpoint, &alloca));
+  return(caslib_init_with(endpoint, &alloca));
 }
 
-casclient_t *casclient_init_with(const char *endpoint, const alloca_t *ptr) {
-  casclient_t *p = ptr->alloca_f(sizeof(casclient_t));
+caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
+  caslib_t *p = ptr->alloca_f(sizeof(caslib_t));
   p->endpoint         = NULL;
   p->timeout          = 60;
   p->alloca.alloca_f  = ptr->alloca_f;
@@ -67,11 +67,11 @@ casclient_t *casclient_init_with(const char *endpoint, const alloca_t *ptr) {
   return(p);
 
  error_handler:
-  casclient_destroy(p);
+  caslib_destroy(p);
   return(NULL);
 }
 
-void casclient_destroy(casclient_t *p) {
+void caslib_destroy(caslib_t *p) {
   if (p == NULL)
     return;
   p->alloca.destroy_f(p->endpoint);
