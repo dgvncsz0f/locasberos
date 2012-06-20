@@ -77,3 +77,7 @@ void caslib_destroy(caslib_t *p) {
   p->alloca.destroy_f(p->endpoint);
   p->alloca.destroy_f(p);
 }
+
+void casresponse_destroy(caslib_t *c, casresponse_t *p) {
+  c->alloca.destroy_f(p);
+}

@@ -109,6 +109,6 @@ void caslib_destroy(caslib_t *);
 
 /*! Free memory used by a given response_t structure.
  */
-void casresponse_destroy(casresponse_t *);
+void casresponse_destroy(caslib_t *, casresponse_t *);
 
 #endif
