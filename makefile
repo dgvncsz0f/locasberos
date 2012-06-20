@@ -2,7 +2,9 @@
 export cfg_srcroot   = $(CURDIR)
 export cfg_srcdir    = $(cfg_srcroot)/src
 export cfg_builddir  = $(cfg_srcroot)/build
+export cfg_trydir    = $(cfg_srcroot)/try
 export CC            = gcc
+export CXX           = g++
 export CCFLAGS       = 
 export CFLAGS        = 
 export LD            = gcc
@@ -16,6 +18,8 @@ lib: .setup_env .lib-lib
 
 dso: .setup_env .dso-apache
 
+test: .setup_env .test-lib
+
 clean:
 	-find $(cfg_srcdir) -type f -name \*.o -exec $(RM) \{\} \;
 	-find $(cfg_srcdir) -type f -name \*.a -exec $(RM) \{\} \;
@@ -23,6 +27,9 @@ clean:
 	-find $(cfg_srcdir) -type f -name \*.la -exec $(RM) \{\} \;
 	-$(RM) -r $$(find $(cfg_srcdir) -type d -name .libs)
 	-$(RM) -r $(cfg_builddir)
+
+.test-lib:
+	$(MAKE) -C $(cfg_srcdir)/lib test
 
 .compile-lib: CFLAGS += -W -Wall -pedantic -std=c99
 .compile-lib:

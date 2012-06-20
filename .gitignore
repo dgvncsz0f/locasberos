@@ -2,4 +2,5 @@
 *.lo
 *.la
 .libs/
-doc/build
+doc/build/
+build/
