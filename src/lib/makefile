@@ -14,7 +14,7 @@ compile: $(O_OBJ_FILES) $(G_OBJ_FILES)
 lib: $(O_LIB_FILE) $(G_LIB_FILE)
 
 .PHONY: test
-test: CXXFLAGS += -W -Wall -I$(cfg_srcdir)/lib
-test: LDFLAGS  += -lunittest++
+test: CXXFLAGS += -W -Wall -I$(cfg_srcdir)/lib -I/usr/include/unittest++
+test: LDFLAGS  += -lUnitTest++
 test: $(TRY_EXE_FILE)
 	$(TRY_EXE_FILE)
