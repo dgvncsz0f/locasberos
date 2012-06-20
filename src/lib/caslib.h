@@ -4,10 +4,10 @@
 // Copyright (c) 2012 pothix
 // Copyright (c) 2012 morellon
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //   * Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //   * Redistributions in binary form must reproduce the above copyright notice,
@@ -16,7 +16,7 @@
 //   * Neither the name of the <ORGANIZATION> nor the names of its contributors
 //     may be used to endorse or promote products derived from this software
 //     without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -51,18 +51,18 @@ caslib_t *caslib_init(const char *endpoint);
 caslib_t *caslib_init_with(const char *endpoint, const alloca_t *alloca);
 
 /*! Checks the validity of a service ticket [1].
- * 
+ *
  * \param service The identifier of the service for which the ticket
  * was issued.
- * 
+ *
  * \param ticket The service ticket issued by /login.
- * 
+ *
  * \param renew If this parameter is true, ticket validation will only
  *              succeed if the service ticket was issued from the
  *              presentation of the user's primary credentials. It
  *              will fail if the ticket was issued from a single
  *              sign-on session.
- * 
+ *
  * [1] http://www.jasig.org/cas/protocol, Section 2.5 (Wed, 20 Jun 2012)
  */
 casresponse_t *caslib_service_validate(const char *service, const char *ticket, bool renew);
@@ -72,9 +72,9 @@ casresponse_t *caslib_service_validate(const char *service, const char *ticket, 
  *
  * \param service The identifier of the service for which the ticket
  * was issued.
- * 
+ *
  * \param ticket The service ticket issued by /login.
- * 
+ *
  * \param renew If this parameter is true, ticket validation will only
  *              succeed if the service ticket was issued from the
  *              presentation of the user's primary credentials. It
