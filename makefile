@@ -31,17 +31,15 @@ clean:
 .test-lib:
 	$(MAKE) -C $(cfg_srcdir)/lib test
 
-.compile-lib: CFLAGS += -W -Wall -pedantic -std=c99
 .compile-lib:
 	$(MAKE) -C $(cfg_srcdir)/lib compile
 
-.lib-lib: .compile-lib
+.lib-lib:
 	$(MAKE) -C $(cfg_srcdir)/lib lib
 
 .dso-apache:
 	$(MAKE) -C $(cfg_srcdir)/apache dso
 
-.setup_env: $(cfg_builddir) $(cfg_builddir)/lib
-
-$(cfg_srcroot)/%:
-	mkdir $@
+.setup_env:
+	test -d $(cfg_builddir) || mkdir $(cfg_builddir)
+	test -d $(cfg_builddir)/lib || mkdir $(cfg_builddir)/lib
