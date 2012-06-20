@@ -1,3 +1,5 @@
+// vim: et:ts=8:sw=2:sts=2
+
 // Copyright (c) 2012 dsouza
 // Copyright (c) 2012 pothix
 // Copyright (c) 2012 morellon
@@ -28,11 +30,11 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "utilities.h"
 #include "alloca.h"
 #include "cas_client.h"
 
-struct casclient_t
-{
+struct casclient_t {
   /* The cas endpoint to use */
   char *endpoint;
 
@@ -44,24 +46,22 @@ struct casclient_t
 };
 
 
-casclient_t *casclient_init(const char *endpoint)
-{
+casclient_t *casclient_init(const char *endpoint) {
   alloca_t alloca;
   alloca_std(&alloca);
-  return(casclient_init2(endpoint, &alloca));
+  return(casclient_init_with(endpoint, &alloca));
 }
 
-casclient_t *casclient_init2(const char *endpoint, const alloca_t *ptr)
-{
+casclient_t *casclient_init_with(const char *endpoint, const alloca_t *ptr) {
   casclient_t *p = ptr->alloca_f(sizeof(casclient_t));
   p->endpoint         = NULL;
   p->timeout          = 60;
   p->alloca.alloca_f  = ptr->alloca_f;
   p->alloca.destroy_f = ptr->destroy_f;
-  CATCH(p==NULL, error_handler);
+  GOTOIF(p==NULL, error_handler);
 
   p->endpoint = ptr->alloca_f(sizeof(char) * (strlen(endpoint) + 1));
-  CATCH(p->endpoint==NULL, error_handler);
+  GOTOIF(p->endpoint==NULL, error_handler);
   strcpy(p->endpoint, endpoint);
 
   return(p);
@@ -71,8 +71,7 @@ casclient_t *casclient_init2(const char *endpoint, const alloca_t *ptr)
   return(NULL);
 }
 
-void casclient_destroy(casclient_t *p)
-{
+void casclient_destroy(casclient_t *p) {
   if (p == NULL)
     return;
   p->alloca.destroy_f(p->endpoint);

@@ -1,3 +1,5 @@
+// vim: et:ts=8:sw=2:sts=2
+
 // Copyright (c) 2012 dsouza
 // Copyright (c) 2012 pothix
 // Copyright (c) 2012 morellon
@@ -29,8 +31,7 @@
 #ifndef __LOCASBEROS_ALLOCA__
 #define __LOCASBEROS_ALLOCA__
 
-typedef struct
-{
+typedef struct {
   /*! This function should allocate size bytes and return a pointer to
    *  the allocated memory.
    *

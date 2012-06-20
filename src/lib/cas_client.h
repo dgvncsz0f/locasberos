@@ -1,3 +1,5 @@
+// vim: et:ts=8:sw=2:sts=2
+
 // Copyright (c) 2012 dsouza
 // Copyright (c) 2012 pothix
 // Copyright (c) 2012 morellon
@@ -29,8 +31,6 @@
 #ifndef __LOCASBEROS_CAS_CLIENT__
 #define __LOCASBEROS_CAS_CLIENT__
 
-#define CATCH(t, h) { if (t) goto h; }
-
 typedef struct casclient_t casclient_t;
 
 /*! Initializes a new casclient_t for using a given endpoint. This is
@@ -45,7 +45,7 @@ casclient_t *casclient_init(const char *endpoint);
  *  custom memory management. This is the dual function of
  *  casclient_destroy.
  */
-casclient_t *casclient_init2(const char *endpoint, const alloca_t *alloca);
+casclient_t *casclient_init_with(const char *endpoint, const alloca_t *alloca);
 
 /*! Free memory used by a given casclient_t structure. This is the
  *  dual function of casclient_init.
