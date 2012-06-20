@@ -8,17 +8,12 @@ Configuration Directives (sketch)
 ---------------------------------
 
 * CasEndpoint
-* CasService
 * CasLoginURL
-* CasLoginDoneURL
+* CasServiceValidateURL
 
-* CasGTicketTimeout
-* CasTicketTimeout
-
-* CasOrder
-* CasAllow
-* CasDeny
+* CasService
+* CasRenew
 
 * CasCookieName
-* CasCookieExpiration
-
+* CasCookieTimeout
+* CasCookiePath
