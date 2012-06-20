@@ -8,24 +8,24 @@ TRY_OBJ_FILES = $(addsuffix _g.lo, $(basename $(TRY_SRC_FILES))) $(G_OBJ_FILES)
 TRY_EXE_FILE  = $(cfg_distdir)/$(TRY_EXE_NAME)
 
 %_g.la: $(G_OBJ_FILES)
-	$(LIBTOOL) --mode=link $(CC) -o $@ $^ $(LDFLAGS)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ $(LDFLAGS)
 
 %_o.la: $(O_OBJ_FILES)
-	$(LIBTOOL) --mode=link $(CC) -o $@ $^ $(LDFLAGS)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ $(LDFLAGS)
 
 %_g.lo: %.c
-	$(LIBTOOL) --mode=compile $(CC) -g $(CPPFLAGS) $(CFLAGS) -c -o $@ $^
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=compile $(CC) -g $(CPPFLAGS) $(CFLAGS) -c -o $@ $^
 
 %_g.lo: %.cc
-	$(LIBTOOL) --mode=compile $(CXX) -g $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $^
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=compile $(CXX) -g $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $^
 
 %_o.lo: %.c
-	$(LIBTOOL) --mode=compile $(CC) -O2 $(CPPFLAGS) $(CFLAGS) -c -o $@ $^
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=compile $(CC) -O2 $(CPPFLAGS) $(CFLAGS) -c -o $@ $^
 
 %_o.lo: %.cc
-	$(LIBTOOL) --mode=compile $(CXX) -O2 $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $^
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=compile $(CXX) -O2 $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $^
 
 $(TRY_EXE_FILE): $(TRY_OBJ_FILES)
-	$(LIBTOOL) --mode=link $(CXX) -o $@ $^ $(LDFLAGS)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ $(LDFLAGS)
 
 .SUFFIX: .lo .la

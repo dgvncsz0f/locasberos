@@ -3,13 +3,13 @@ export cfg_srcroot   = $(CURDIR)
 export cfg_srcdir    = $(cfg_srcroot)/src
 export cfg_builddir  = $(cfg_srcroot)/build
 export cfg_trydir    = $(cfg_srcroot)/try
-export CC            = gcc
-export CXX           = g++
 export CCFLAGS       = 
 export CFLAGS        = 
-export LD            = gcc
 export LDFLAGS       = 
+export LIBTOOLFLAGS  = --silent
 
+export CC            = gcc
+export CXX           = g++
 export LIBTOOL       = libtool
 
 compile: .setup_env .compile-lib

@@ -11,9 +11,11 @@ include $(cfg_srcroot)/makefile.rules
 compile: $(O_OBJ_FILES) $(G_OBJ_FILES)
 
 .PHONY:
+lib: LD = gcc
 lib: $(O_LIB_FILE) $(G_LIB_FILE)
 
 .PHONY: test
+test: LD        = g++
 test: CXXFLAGS += -W -Wall -I$(cfg_srcdir)/lib -I/usr/include/unittest++
 test: LDFLAGS  += -lUnitTest++
 test: $(TRY_EXE_FILE)
