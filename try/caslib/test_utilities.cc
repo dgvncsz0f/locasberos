@@ -30,45 +30,21 @@
 
 #include <UnitTest++.h>
 extern "C" {
-#include "alloca.h"
-#include "caslib.h"
-}
-
-size_t trace_alloc_calls;
-size_t trace_destroy_calls;
-
-static
-void *bogus_alloc(size_t) {
-  return(NULL);
+#include "utilities.h"
 }
 
 static
-void *trace_alloc(size_t s) {
-  trace_alloc_calls += 1;
-  return(malloc(s));
+int raise_error_when_status_is_not_zero(int status) {
+  GOTOIF(status != 0, error_handler);
+  return 0;
+ error_handler:
+  return 1;
 }
 
-static
-void trace_destroy(void *p) {
-  trace_destroy_calls += 1;
-  free(p);
+TEST(gotoif_should_execute_an_error_handler_function_if_the_condition_returns_true) {
+  CHECK(raise_error_when_status_is_not_zero(42) == 1);
 }
 
-TEST(caslib_init_with_should_cope_with_malloc_failure) {
-  alloca_t alloca;
-  alloca.alloca_f  = bogus_alloc;
-  alloca.destroy_f = free;
-  CHECK(NULL == caslib_init_with("", &alloca));
-}
-
-TEST(caslib_init_with_should_invoke_destroy_for_each_alloca) {
-  trace_alloc_calls   = 0;
-  trace_destroy_calls = 0;
-  alloca_t alloca;
-  alloca.alloca_f  = trace_alloc;
-  alloca.destroy_f = trace_destroy;
-  caslib_t *ptr = caslib_init_with("", &alloca);
-  caslib_destroy(ptr);
-  CHECK(trace_alloc_calls > 0);
-  CHECK(trace_destroy_calls == trace_alloc_calls);
+TEST(gotoif_should_not_execute_an_error_handler_function_if_the_condition_returns_false) {
+  CHECK(raise_error_when_status_is_not_zero(0) == 0);
 }
