@@ -2,16 +2,22 @@
 
 O_OBJ_FILES   = $(addsuffix _o.lo, $(basename $(SRC_FILES)))
 G_OBJ_FILES   = $(addsuffix _g.lo, $(basename $(SRC_FILES)))
-O_LIB_FILE    = $(addsuffix _o.la, $(LIB_NAME))
-G_LIB_FILE    = $(addsuffix _g.la, $(LIB_NAME))
-TRY_OBJ_FILES = $(addsuffix _g.lo, $(basename $(TRY_SRC_FILES))) $(G_OBJ_FILES)
-TRY_EXE_FILE  = $(cfg_distdir)/$(TRY_EXE_NAME)
+O_LNK_FILE    = $(addsuffix .la, $(LNK_NAME))
+G_LNK_FILE    = $(addsuffix _dbg.la, $(LNK_NAME))
+O_EXE_FILE    = $(LNK_NAME)
+G_EXE_FILE    = $(addsuffix _dbg, $(LNK_NAME))
 
-%_g.la: $(G_OBJ_FILES)
-	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ $(LDFLAGS)
+$(O_LNK_FILE): $(O_OBJ_FILES)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ -rpath $(install_root)/usr/lib $(LDFLAGS)
 
-%_o.la: $(O_OBJ_FILES)
-	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ $(LDFLAGS)
+$(G_LNK_FILE): $(G_OBJ_FILES)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ -rpath $(install_root)/usr/lib $(LDFLAGS)
+
+$(O_EXE_FILE): $(O_OBJ_FILES)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ -rpath $(install_root)/usr/bin $(LDFLAGS)
+
+$(G_EXE_FILE): $(G_OBJ_FILES)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ -rpath $(install_root)/usr/bin $(LDFLAGS)
 
 %_g.lo: %.c
 	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=compile $(CC) -g $(CPPFLAGS) $(CFLAGS) -c -o $@ $^
@@ -25,7 +31,5 @@ TRY_EXE_FILE  = $(cfg_distdir)/$(TRY_EXE_NAME)
 %_o.lo: %.cc
 	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=compile $(CXX) -O2 $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $^
 
-$(TRY_EXE_FILE): $(TRY_OBJ_FILES)
-	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=link $(LD) -o $@ $^ $(LDFLAGS)
-
 .SUFFIX: .lo .la
+
