@@ -67,8 +67,7 @@ TEST(caslib_init_with_should_invoke_destroy_for_each_alloca) {
   alloca_t alloca;
   alloca.alloca_f  = trace_alloc;
   alloca.destroy_f = trace_destroy;
-  caslib_t *ptr = caslib_init_with("", &alloca);
-  caslib_destroy(ptr);
+  caslib_destroy(caslib_init_with("", &alloca));
   CHECK(trace_alloc_calls > 0);
   CHECK(trace_destroy_calls == trace_alloc_calls);
 }

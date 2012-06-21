@@ -3,5 +3,5 @@
 *.la
 .libs/
 doc/build/
-build/
+dist/
 try/caslib/try_caslib_dbg

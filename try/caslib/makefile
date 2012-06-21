@@ -10,10 +10,12 @@ compile: $(G_OBJ_FILES)
 
 .PHONY: link
 link: LD        = g++
-link: LDFLAGS  += $(cfg_srcdir)/caslib/.libs/libcaslib_dbg.a -lUnitTest++
+link: LDFLAGS  += $(cfg_srcdir)/caslib/.libs/libcaslib_dbg.a -lUnitTest++ -lcurl -lxml2
 link: compile $(G_EXE_FILE)
 
 .PHONY: install
 install: link
-	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=install cp $(G_EXE_FILE) $(install_root)/usr/bin/$(G_EXE_FILE)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=install cp $(G_EXE_FILE) $(root)/usr/bin/$(G_EXE_FILE)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=finish $(root)/usr/bin
 
+$(G_EXE_FILE): $(cfg_srcdir)/caslib/.libs/libcaslib_dbg.a

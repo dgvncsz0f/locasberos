@@ -29,9 +29,15 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <UnitTest++.h>
+extern "C" {
+#include "caslib.h"
+}
 
 int main(void)
 {
-  return(UnitTest::RunAllTests());
+  caslib_global_init();
+  int rc = UnitTest::RunAllTests();
+  caslib_global_destroy();
+  return(rc);
 }
 

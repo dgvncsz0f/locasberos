@@ -37,6 +37,15 @@
 typedef struct caslib_t caslib_t;
 typedef struct casresponse_t casresponse_t;
 
+/*! Must be called once in the program
+ * \return 0=Ok.
+ */
+int caslib_global_init();
+
+/*! Should be called once per caslib_global_init.
+ */
+void caslib_global_destroy();
+
 /*! Initializes a new caslib_t using a given endpoint. This is the
  *  dual function of caslib_destroy.
  *
@@ -65,7 +74,7 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *alloca);
  *
  * [1] http://www.jasig.org/cas/protocol, Section 2.5 (Wed, 20 Jun 2012)
  */
-casresponse_t *caslib_service_validate(const char *service, const char *ticket, bool renew);
+casresponse_t *caslib_service_validate(const caslib_t *, const char *service, const char *ticket, bool renew);
 
 /*! The same as caslib_service_validate but allows you to provide a
  *  proxy callback url.

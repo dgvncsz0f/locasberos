@@ -1,5 +1,5 @@
 
-export install_root  = $(CURDIR)/build
+export root          = $(CURDIR)/dist
 export cfg_srcroot   = $(CURDIR)
 export cfg_srcdir    = $(cfg_srcroot)/src
 export cfg_trydir    = $(cfg_srcroot)/try
@@ -12,16 +12,18 @@ export CC            = gcc
 export CXX           = g++
 export LIBTOOL       = libtool
 
-compile: .setup_env .compile-lib
+compile: .compile-caslib
 
-link: .setup_env .link-lib .link-try
+link: .link-caslib
 
-dso: .setup_env .dso-apache
+link-try: link .link-try
 
-install: .setup_env .install-lib .install-try
+install: .setup_env .install-caslib
 
-test: .setup_env .install-try
-	$(install_root)/usr/bin/try_caslib_dbg
+install-try: install .install-try
+
+test: .link-try
+	$(cfg_trydir)/caslib/try_caslib_dbg
 
 clean:
 	-find $(cfg_srcdir) -type f -name \*.o -exec $(RM) \{\} \;
@@ -35,31 +37,28 @@ clean:
 	-$(RM) -r $$(find $(cfg_trydir) -type d -name .libs)
 	-$(RM) -r $$(find $(cfg_srcdir) -type d -name .libs)
 	-$(RM) $(cfg_trydir)/caslib/try_caslib_dbg
-	-$(RM) -r $(install_root)
 
-.install-lib:
+.install-caslib:
 	@$(MAKE) -C $(cfg_srcdir)/caslib install
 
-.test-lib:
+.test-caslib:
 	@$(MAKE) -C $(cfg_srcdir)/caslib test
 
-.compile-lib:
+.compile-caslib:
 	@$(MAKE) -C $(cfg_srcdir)/caslib compile
 
-.link-lib:
+.link-caslib:
 	@$(MAKE) -C $(cfg_srcdir)/caslib link
 
-.install-try: .link-lib
+.install-try: .link-try
 	@$(MAKE) -C $(cfg_trydir)/caslib install
 
-.link-try:
+.link-try: .link-caslib
 	@$(MAKE) -C $(cfg_trydir)/caslib link
 
-.dso-apache:
-	@$(MAKE) -C $(cfg_srcdir)/apache dso
-
 .setup_env:
-	@test -d $(install_root)         || mkdir $(install_root)
-	@test -d $(install_root)/usr     || mkdir $(install_root)/usr
-	@test -d $(install_root)/usr/lib || mkdir $(install_root)/usr/lib
-	@test -d $(install_root)/usr/bin || mkdir $(install_root)/usr/bin
+	@test -d $(root)         || mkdir $(root)
+	@test -d $(root)/usr     || mkdir $(root)/usr
+	@test -d $(root)/usr/lib || mkdir $(root)/usr/lib
+	@test -d $(root)/usr/bin || mkdir $(root)/usr/bin
+
