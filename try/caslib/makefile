@@ -17,6 +17,3 @@ link: compile $(G_EXE_FILE)
 install: link
 	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=install cp $(G_EXE_FILE) $(install_root)/usr/bin/$(G_EXE_FILE)
 
-.PHONY: clean
-clean:
-	$(RM) $(G_EXE_FILE)

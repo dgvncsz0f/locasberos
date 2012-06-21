@@ -35,7 +35,7 @@ extern "C" {
 }
 
 static
-void *bogus_alloc(size_t s) {
+void *bogus_alloc(size_t) {
   return(NULL);
 }
 

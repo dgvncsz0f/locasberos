@@ -23,7 +23,7 @@ install: .setup_env .install-lib .install-try
 test: .setup_env .install-try
 	$(install_root)/usr/bin/try_caslib_dbg
 
-clean: .clean-try
+clean:
 	-find $(cfg_srcdir) -type f -name \*.o -exec $(RM) \{\} \;
 	-find $(cfg_srcdir) -type f -name \*.a -exec $(RM) \{\} \;
 	-find $(cfg_srcdir) -type f -name \*.lo -exec $(RM) \{\} \;
@@ -34,6 +34,7 @@ clean: .clean-try
 	-find $(cfg_trydir) -type f -name \*.la -exec $(RM) \{\} \;
 	-$(RM) -r $$(find $(cfg_trydir) -type d -name .libs)
 	-$(RM) -r $$(find $(cfg_srcdir) -type d -name .libs)
+	-$(RM) $(cfg_trydir)/caslib/try_caslib_dbg
 	-$(RM) -r $(install_root)
 
 .install-lib:
@@ -54,14 +55,11 @@ clean: .clean-try
 .link-try:
 	@$(MAKE) -C $(cfg_trydir)/caslib link
 
-.clean-try:
-	@$(MAKE) -C $(cfg_trydir)/caslib clean
-
 .dso-apache:
 	@$(MAKE) -C $(cfg_srcdir)/apache dso
 
 .setup_env:
-	test -d $(install_root)         || mkdir $(install_root)
-	test -d $(install_root)/usr     || mkdir $(install_root)/usr
-	test -d $(install_root)/usr/lib || mkdir $(install_root)/usr/lib
-	test -d $(install_root)/usr/bin || mkdir $(install_root)/usr/bin
+	@test -d $(install_root)         || mkdir $(install_root)
+	@test -d $(install_root)/usr     || mkdir $(install_root)/usr
+	@test -d $(install_root)/usr/lib || mkdir $(install_root)/usr/lib
+	@test -d $(install_root)/usr/bin || mkdir $(install_root)/usr/bin
