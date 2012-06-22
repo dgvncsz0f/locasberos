@@ -33,6 +33,7 @@
 #include <string.h>
 #include <stdarg.h>
 #include <curl/curl.h>
+#include <libxml/xmlstring.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include "utilities.h"
@@ -226,7 +227,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   CURLcode curl_rc = curl_easy_perform(curl);
   GOTOIF(curl_rc!=0, failure);
   xmlParseChunk(ctxt, NULL, 0, 1);
-  GOTOIF(ctxt->wellFormed, failure);
+  GOTOIF(! ctxt->wellFormed, failure);
 
   rsp = cas->alloca.alloca_f(sizeof(caslib_rsp_t));
   GOTOIF(rsp == NULL, failure);
@@ -269,3 +270,20 @@ void caslib_rsp_destroy(caslib_t *c, caslib_rsp_t *p) {
   c->alloca.destroy_f(p);
 }
 
+bool caslib_rsp_authentication(const caslib_rsp_t *p) {
+  if (p->xml == NULL)
+    return(false);
+
+  xmlNodePtr node = xmlDocGetRootElement(p->xml)->children;
+  while ((node = node->next)) {
+    if (node->type != XML_ELEMENT_NODE
+        || node->ns == NULL
+        || xmlStrcmp(node->ns->href, (xmlChar *) "http://www.yale.edu/tp/cas") != 0)
+      continue;
+    if (xmlStrcmp(node->name, (xmlChar *) "authenticationFailure") == 0
+        || xmlStrcmp(node->name, (xmlChar *) "authenticationSuccess") == 0)
+      return(true);
+  }
+
+  return(false);
+}
