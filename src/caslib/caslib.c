@@ -83,7 +83,7 @@ int __joinparams(const caslib_t *cas, char *dest, size_t sz, int argv, ...) {
   if (dest != NULL) {
     fmtstr = cas->alloca.alloca_f(3*argv);
     for (k=0; k<argv; k+=1) {
-      if (k==0)
+      if (k == 0)
         strncpy(fmtstr, "%s", 2);
       else
         strncpy(fmtstr + 3*k-1, "&%s", 3);
@@ -230,7 +230,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   GOTOIF(! ctxt->wellFormed, failure);
 
   rsp = cas->alloca.alloca_f(sizeof(caslib_rsp_t));
-  GOTOIF(rsp == NULL, failure);
+  GOTOIF(rsp==NULL, failure);
   rsp->xml    = ctxt->myDoc;
   rsp->status = 0;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &rsp->status);
@@ -270,12 +270,12 @@ void caslib_rsp_destroy(caslib_t *c, caslib_rsp_t *p) {
   c->alloca.destroy_f(p);
 }
 
-int caslib_rsp_authentication(const caslib_rsp_t *p) {
+int caslib_rsp_auth(const caslib_rsp_t *p) {
   if (p->xml == NULL)
     return(-1);
 
   xmlNodePtr node = xmlDocGetRootElement(p->xml)->children;
-  while ((node = node->next)) {
+  while (node != NULL && (node = node->next)) {
     if (node->type != XML_ELEMENT_NODE
         || node->ns == NULL
         || xmlStrcmp(node->ns->href, (xmlChar *) "http://www.yale.edu/tp/cas") != 0)
@@ -289,6 +289,6 @@ int caslib_rsp_authentication(const caslib_rsp_t *p) {
   return(-1);
 }
 
-bool caslib_rsp_authentication_success(const caslib_rsp_t *p) {
-  return(caslib_rsp_authentication(p) == 0);
+bool caslib_rsp_auth_success(const caslib_rsp_t *p) {
+  return(caslib_rsp_auth(p) == 0);
 }

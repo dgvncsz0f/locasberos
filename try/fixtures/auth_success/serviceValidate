@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
+    <cas:authenticationSuccess>
+        <cas:user>username</cas:user>
+            <cas:proxyGrantingTicket>PGTIOU-84678-8a9d...
+        </cas:proxyGrantingTicket>
+    </cas:authenticationSuccess>
+</cas:serviceResponse>

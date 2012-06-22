@@ -30,7 +30,7 @@
 
 #include <UnitTest++.h>
 extern "C" {
-#include "caslib.h"
+#include "caslib/caslib.h"
 }
 
 int main(void)

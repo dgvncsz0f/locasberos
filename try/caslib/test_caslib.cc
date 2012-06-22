@@ -29,9 +29,10 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <UnitTest++.h>
+#include "fixtures.hh"
 extern "C" {
-#include "alloca.h"
-#include "caslib.h"
+#include "caslib/alloca.h"
+#include "caslib/caslib.h"
 }
 
 size_t trace_alloc_calls;
@@ -69,5 +70,84 @@ TEST(caslib_init_with_should_invoke_destroy_for_each_alloca) {
   alloca.destroy_f = trace_destroy;
   caslib_destroy(caslib_init_with("", &alloca));
   CHECK(trace_alloc_calls > 0);
-  CHECK(trace_destroy_calls == trace_alloc_calls);
+  CHECK_EQUAL(trace_alloc_calls, trace_destroy_calls);
+}
+
+TEST(caslib_service_validate_should_not_return_NULL_for_auth_success_responses) {
+  std::string url   = "file://" + fixture_path("/auth_success");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK(rsp != NULL);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_service_validate_should_not_return_NULL_for_auth_failure_responses) {
+  std::string url   = "file://" + fixture_path("/auth_failure");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK(rsp != NULL);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_service_validate_should_return_NULL_for_garbage_responses) {
+  std::string url   = "file://" + fixture_path("/auth_garbage");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK(rsp == NULL);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_rsp_auth_should_return_0_for_auth_success_responses) {
+  std::string url   = "file://" + fixture_path("/auth_success");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(0, caslib_rsp_auth(rsp));
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_rsp_auth_should_return_1_for_auth_failure_responses) {
+  std::string url   = "file://" + fixture_path("/auth_failure");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(1, caslib_rsp_auth(rsp));
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_rsp_auth_should_return_minus1_for_unknown_responses) {
+  std::string url   = "file://" + fixture_path("/auth_bogus");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(-1, caslib_rsp_auth(rsp));
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_rsp_auth_should_return_true_for_auth_success_responses) {
+  std::string url   = "file://" + fixture_path("/auth_success");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(true, caslib_rsp_auth_success(rsp));
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_rsp_auth_should_return_false_for_everything_else) {
+  std::string url   = "file://" + fixture_path("/auth_failure");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(false, caslib_rsp_auth_success(rsp));
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+
+  url = "file://" + fixture_path("/auth_bogus");
+  cas = caslib_init(url.c_str());
+  rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(false, caslib_rsp_auth_success(rsp));
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
 }

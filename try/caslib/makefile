@@ -1,11 +1,11 @@
 
-SRC_FILES = $(shell find $(cfg_trydir)/caslib -type f -name \*.cc)
+SRC_FILES = $(shell find $(cfg_trydir)/caslib -type f -name \*.cc) $(cfg_trydir)/fixtures.cc
 LNK_NAME  = try_caslib
 
 include $(cfg_srcroot)/makefile.rules
 
 .PHONY: compile
-compile: CXXFLAGS += -W -Wall -pedantic -I$(cfg_srcdir)/utilities -I$(cfg_srcdir)/caslib -I/usr/include/unittest++
+compile: CXXFLAGS += -W -Wall -pedantic -I$(cfg_srcdir)/utilities -I$(cfg_srcdir) -I$(cfg_trydir) -I/usr/include/unittest++
 compile: $(G_OBJ_FILES)
 
 .PHONY: link

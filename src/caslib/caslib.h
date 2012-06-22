@@ -33,6 +33,7 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
+#include "alloca.h"
 
 typedef struct caslib_t caslib_t;
 typedef struct caslib_rsp_t caslib_rsp_t;
@@ -105,7 +106,7 @@ caslib_rsp_t *caslib_service_validate_pgt(const char *service, const char *ticke
  *         1 Authentication failure;
  *        -1 Not an authentication response;
  */
-int caslib_rsp_authentication(const caslib_rsp_t *);
+int caslib_rsp_auth(const caslib_rsp_t *);
 
 /*! Checks if a response contains an authentication success message.
  *
@@ -113,7 +114,7 @@ int caslib_rsp_authentication(const caslib_rsp_t *);
  *         might means it is an authentication failure or not an
  *         authentication response at all.
  */
-bool caslib_rsp_authentication_success(const caslib_rsp_t *);
+bool caslib_rsp_auth_success(const caslib_rsp_t *);
 
 /*! Free memory used by a given caslib_t structure. This is the
  *  dual function of caslib_init.
