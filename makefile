@@ -23,7 +23,7 @@ install: .setup_env .install-caslib
 install-try: install .install-try
 
 test: .link-try
-	$(cfg_trydir)/caslib/try_caslib_dbg
+	env MALLOC_CHECK_=1 $(cfg_trydir)/caslib/try_caslib_dbg
 
 clean:
 	-find $(cfg_srcdir) -type f -name \*.o -exec $(RM) \{\} \;
