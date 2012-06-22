@@ -46,7 +46,7 @@ struct caslib_t {
   alloca_t alloca;
 };
 
-struct casresponse_t {
+struct caslib_rsp_t {
   long status;
   xmlDocPtr xml;
 };
@@ -178,7 +178,7 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
   return(NULL);
 }
 
-casresponse_t *caslib_service_validate(const caslib_t *cas, const char *service, const char *ticket, bool renew) {
+caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, const char *ticket, bool renew) {
   int rc;
   size_t sz;
   char *url                  = NULL,
@@ -189,7 +189,7 @@ casresponse_t *caslib_service_validate(const caslib_t *cas, const char *service,
   CURL *curl                 = NULL;
   struct curl_slist *headers = NULL;
   xmlParserCtxtPtr ctxt      = NULL;
-  casresponse_t *rsp         = NULL;
+  caslib_rsp_t *rsp         = NULL;
 
   ctxt = xmlCreatePushParserCtxt(NULL, NULL, NULL, 0, "service_validate");
   GOTOIF(ctxt==NULL, failure);
@@ -228,7 +228,7 @@ casresponse_t *caslib_service_validate(const caslib_t *cas, const char *service,
   xmlParseChunk(ctxt, NULL, 0, 1);
   GOTOIF(ctxt->wellFormed, failure);
 
-  rsp = cas->alloca.alloca_f(sizeof(casresponse_t));
+  rsp = cas->alloca.alloca_f(sizeof(caslib_rsp_t));
   GOTOIF(rsp == NULL, failure);
   rsp->xml    = ctxt->myDoc;
   rsp->status = 0;
@@ -254,7 +254,6 @@ casresponse_t *caslib_service_validate(const caslib_t *cas, const char *service,
   return(rsp);
 }
 
-
 void caslib_destroy(caslib_t *p) {
   if (p == NULL)
     return;
@@ -263,9 +262,10 @@ void caslib_destroy(caslib_t *p) {
   p->alloca.destroy_f(p);
 }
 
-void casresponse_destroy(caslib_t *c, casresponse_t *p) {
+void caslib_rsp_destroy(caslib_t *c, caslib_rsp_t *p) {
   if (p == NULL)
     return;
   xmlFreeDoc(p->xml);
   c->alloca.destroy_f(p);
 }
+

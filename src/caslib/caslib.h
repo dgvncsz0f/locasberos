@@ -35,7 +35,7 @@
 #include <stdbool.h>
 
 typedef struct caslib_t caslib_t;
-typedef struct casresponse_t casresponse_t;
+typedef struct caslib_rsp_t caslib_rsp_t;
 
 /*! Must be called once in the program
  * \return 0=Ok.
@@ -74,7 +74,7 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *alloca);
  *
  * [1] http://www.jasig.org/cas/protocol, Section 2.5 (Wed, 20 Jun 2012)
  */
-casresponse_t *caslib_service_validate(const caslib_t *, const char *service, const char *ticket, bool renew);
+caslib_rsp_t *caslib_service_validate(const caslib_t *, const char *service, const char *ticket, bool renew);
 
 /*! The same as caslib_service_validate but allows you to provide a
  *  proxy callback url.
@@ -93,15 +93,15 @@ casresponse_t *caslib_service_validate(const caslib_t *, const char *service, co
  * \param pgtUrl The URL of the proxy callback.
  *
  * \return The response of the validation request. Remember to free
- *         memory using casresponse_destroy, in order to make sure the
+ *         memory using caslib_rsp_destroy, in order to make sure the
  *         proper function gets called.
  */
-casresponse_t *caslib_service_validate_pgt(const char *service, const char *ticket, bool renew, const char *pgturl);
+caslib_rsp_t *caslib_service_validate_pgt(const char *service, const char *ticket, bool renew, const char *pgturl);
 
 /*! Returns true if the response is either an authentication success
  *  or an authentication failure.
  */
-bool casresponse_authentication(const casresponse_t *);
+bool caslib_rsp_authentication(const caslib_rsp_t *);
 
 /*! Checks if a response contains an authentication success message.
  *
@@ -109,7 +109,7 @@ bool casresponse_authentication(const casresponse_t *);
  *         might means it is an authentication failure or not an
  *         authentication response at all.
  */
-bool casresponse_authentication_success(const casresponse_t *);
+bool caslib_rsp_authentication_success(const caslib_rsp_t *);
 
 /*! Free memory used by a given caslib_t structure. This is the
  *  dual function of caslib_init.
@@ -118,6 +118,6 @@ void caslib_destroy(caslib_t *);
 
 /*! Free memory used by a given response_t structure.
  */
-void casresponse_destroy(caslib_t *, casresponse_t *);
+void caslib_rsp_destroy(caslib_t *, caslib_rsp_t *);
 
 #endif
