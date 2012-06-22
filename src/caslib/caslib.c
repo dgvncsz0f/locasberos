@@ -270,9 +270,9 @@ void caslib_rsp_destroy(caslib_t *c, caslib_rsp_t *p) {
   c->alloca.destroy_f(p);
 }
 
-bool caslib_rsp_authentication(const caslib_rsp_t *p) {
+int caslib_rsp_authentication(const caslib_rsp_t *p) {
   if (p->xml == NULL)
-    return(false);
+    return(-1);
 
   xmlNodePtr node = xmlDocGetRootElement(p->xml)->children;
   while ((node = node->next)) {
@@ -280,10 +280,15 @@ bool caslib_rsp_authentication(const caslib_rsp_t *p) {
         || node->ns == NULL
         || xmlStrcmp(node->ns->href, (xmlChar *) "http://www.yale.edu/tp/cas") != 0)
       continue;
-    if (xmlStrcmp(node->name, (xmlChar *) "authenticationFailure") == 0
-        || xmlStrcmp(node->name, (xmlChar *) "authenticationSuccess") == 0)
-      return(true);
+    if (xmlStrcmp(node->name, (xmlChar *) "authenticationFailure") == 0)
+      return(1);
+    if (xmlStrcmp(node->name, (xmlChar *) "authenticationSuccess") == 0)
+      return(0);
   }
 
-  return(false);
+  return(-1);
+}
+
+bool caslib_rsp_authentication_success(const caslib_rsp_t *p) {
+  return(caslib_rsp_authentication(p) == 0);
 }

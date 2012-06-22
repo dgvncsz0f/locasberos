@@ -100,8 +100,12 @@ caslib_rsp_t *caslib_service_validate_pgt(const char *service, const char *ticke
 
 /*! Returns true if the response is either an authentication success
  *  or an authentication failure.
+ *
+ * \return 0 Authentication success;
+ *         1 Authentication failure;
+ *        -1 Not an authentication response;
  */
-bool caslib_rsp_authentication(const caslib_rsp_t *);
+int caslib_rsp_authentication(const caslib_rsp_t *);
 
 /*! Checks if a response contains an authentication success message.
  *
