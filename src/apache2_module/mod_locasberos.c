@@ -43,11 +43,26 @@ module AP_MODULE_DECLARE_DATA locasberos_module;
 
 typedef struct {
   int bEnabled;
+  unsigned int merged;
+  unsigned int CasCookieTimeout;
+  char *CasCookieName;
+  char *CasEndpoint;
+  char *CasService;
+  char *CasRenew;
+  apr_uri_t CasLoginURL;
+  apr_uri_t CasServiceValidateURL;
 } LocasberosConfig;
 
 static void *LocasberosCreateServerConfig(apr_pool_t *p,server_rec *s) {
   LocasberosConfig *pConfig=apr_pcalloc(p,sizeof *pConfig);
-  pConfig->bEnabled=0;
+  pConfig->bEnabled = 0;
+  pConfig->CasCookieTimeout = 3600;
+  pConfig->CasCookieName = "MOD_LOCASBEROS";
+  pConfig->CasEndpoint = NULL;
+  pConfig->CasService = NULL;
+  pConfig->CasRenew = NULL;
+  pConfig->CasLoginURL = NULL;
+  pConfig->CasServiceValidateURL = NULL;
 
   return pConfig;
 }
