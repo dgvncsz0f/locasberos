@@ -22,6 +22,9 @@ install: .setup_env .install-caslib
 
 install-try: install .install-try
 
+release:
+	$(cfg_srcdir)/mkversion.h
+
 test: .link-try
 	env MALLOC_CHECK_=1 $(cfg_trydir)/caslib/try_caslib_dbg
 
