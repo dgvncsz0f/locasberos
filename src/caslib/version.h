@@ -28,23 +28,25 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <UnitTest++.h>
-extern "C" {
-#include "caslib/utilities.h"
-}
+#ifndef __LOCASBEROS_VERSION__
+#define __LOCASBEROS_VERSION__
 
-static
-int raise_error_when_status_is_not_zero(int status) {
-  GOTOIF(status != 0, error_handler);
-  return 0;
- error_handler:
-  return 1;
-}
+// Changed if backwards incompatible changes are introduced to the
+// public API
+#define CASLIB_MAJOR 0 
 
-TEST(gotoif_should_execute_an_error_handler_function_if_the_condition_returns_true) {
-  CHECK(raise_error_when_status_is_not_zero(42) == 1);
-}
+// Changed if new, backwards compatible, functionality is introduced
+// to the public API
+#define CASLIB_MINOR 1
 
-TEST(gotoif_should_not_execute_an_error_handler_function_if_the_condition_returns_false) {
-  CHECK(raise_error_when_status_is_not_zero(0) == 0);
-}
+// Changed whenever backwards compatible bug fixes are introduced
+#define CASLIB_PATCH 0
+
+// The build version
+#define CASLIB_BUILD 1
+
+// The string: "%d.%d.%d-%s", MAJOR, MINOR, PATCH, BUILD
+#define CASLIB_VERSION "0.1.0-1"
+
+#endif
+

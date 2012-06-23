@@ -36,7 +36,7 @@
 #include <libxml/xmlstring.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include "utilities.h"
+#include "misc.h"
 #include "alloca.h"
 #include "caslib.h"
 
@@ -109,7 +109,7 @@ int __uencode(CURL *curl, char *dest, size_t sz, const char *key, const char *va
 
   e_key = curl_easy_escape(curl, key, 0);
   e_val = curl_easy_escape(curl, val, 0);
-  GOTOIF(e_key==NULL || e_val==NULL, release);
+  CASLIB_GOTOIF(e_key==NULL || e_val==NULL, release);
   if (dest != NULL) {
     snprintf(dest, sz, "%s=%s", e_key, e_val);
     rc = strlen(dest);
@@ -157,7 +157,7 @@ caslib_t *caslib_init(const char *endpoint) {
 
 caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
   caslib_t *p = ptr->alloca_f(sizeof(caslib_t));
-  GOTOIF(p==NULL, failure);
+  CASLIB_GOTOIF(p==NULL, failure);
   p->endpoint             = NULL;
   p->service_validate_url = NULL;
   p->timeout              = 60;
@@ -165,11 +165,11 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
   p->alloca.destroy_f     = ptr->destroy_f;
 
   p->endpoint = ptr->alloca_f(strlen(endpoint) + 1);
-  GOTOIF(p->endpoint==NULL, failure);
+  CASLIB_GOTOIF(p->endpoint==NULL, failure);
   strcpy(p->endpoint, endpoint);
 
   p->service_validate_url = ptr->alloca_f(strlen("/serviceValidate") + 1);
-  GOTOIF(p->service_validate_url==NULL, failure);
+  CASLIB_GOTOIF(p->service_validate_url==NULL, failure);
   strcpy(p->service_validate_url, "/serviceValidate");
 
   return(p);
@@ -193,29 +193,29 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   caslib_rsp_t *rsp         = NULL;
 
   ctxt = xmlCreatePushParserCtxt(NULL, NULL, NULL, 0, "service_validate");
-  GOTOIF(ctxt==NULL, failure);
+  CASLIB_GOTOIF(ctxt==NULL, failure);
   curl = curl_easy_init();
-  GOTOIF(curl==NULL, failure);
+  CASLIB_GOTOIF(curl==NULL, failure);
 
   sz  = strlen(cas->endpoint) + strlen(cas->service_validate_url);
   url = cas->alloca.alloca_f(sz+1);
-  GOTOIF(url==NULL, failure);
+  CASLIB_GOTOIF(url==NULL, failure);
   rc  = snprintf(url, sz+1, "%s%s", cas->endpoint, cas->service_validate_url);
-  GOTOIF(rc<0, failure);
+  CASLIB_GOTOIF(rc<0, failure);
 
   eservice = __uencode_r(cas, curl, "service", service);
   eticket  = __uencode_r(cas, curl, "ticket", ticket);
   erenew   = __uencode_r(cas, curl, "renew", (renew ? "true" : "false"));
   rc       = __joinparams(cas, NULL, 0, 3, eservice, eticket, erenew);
-  GOTOIF(rc<0, failure);
+  CASLIB_GOTOIF(rc<0, failure);
   reqbdy   = cas->alloca.alloca_f(rc);
-  GOTOIF(reqbdy==NULL, failure);
+  CASLIB_GOTOIF(reqbdy==NULL, failure);
   rc       = __joinparams(cas, reqbdy, rc, 3, eservice, eticket, erenew);
-  GOTOIF(rc<0, failure);
+  CASLIB_GOTOIF(rc<0, failure);
 
   headers = curl_slist_append(headers, "Expect:");
   headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
-  GOTOIF(headers==NULL, failure);
+  CASLIB_GOTOIF(headers==NULL, failure);
 
   __curl_set_common_opt(cas, curl);
   curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -225,16 +225,16 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, reqbdy);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, ctxt);
   CURLcode curl_rc = curl_easy_perform(curl);
-  GOTOIF(curl_rc!=0, failure);
+  CASLIB_GOTOIF(curl_rc!=0, failure);
   xmlParseChunk(ctxt, NULL, 0, 1);
-  GOTOIF(! ctxt->wellFormed, failure);
+  CASLIB_GOTOIF(! ctxt->wellFormed, failure);
 
   rsp = cas->alloca.alloca_f(sizeof(caslib_rsp_t));
-  GOTOIF(rsp==NULL, failure);
+  CASLIB_GOTOIF(rsp==NULL, failure);
   rsp->xml    = ctxt->myDoc;
   rsp->status = 0;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &rsp->status);
-  GOTOIF(true, release);
+  CASLIB_GOTOIF(true, release);
 
  failure:
   cas->alloca.destroy_f(rsp);

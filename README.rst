@@ -1,3 +1,4 @@
+==========
 LOCASBEROS
 ==========
 
@@ -5,7 +6,7 @@ A apache/nginx authentication module.
 
 
 Configuration Directives (sketch)
----------------------------------
+=================================
 
 * CasEndpoint
 * CasLoginURL
@@ -19,13 +20,17 @@ Configuration Directives (sketch)
 * CasCookiePath
 
 Dependencies
-------------
+============
 
-* libcurl >=7.25
-* libxml2 >=2.7.8
+* Building
 
-Test Dependencies
------------------
+  - gcc
+  - libtool
+  - libcurl >=7.25
+  - libxml2 >=2.7.8
 
-* libunittest++ >=1.4
+* Testing
+
+  - g++
+  - libunittest++ >=1.4
 
