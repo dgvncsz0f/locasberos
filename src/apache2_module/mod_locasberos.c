@@ -38,46 +38,46 @@
 
 #include <ctype.h>
 
-static const char s_szLocasberosName[]="Locasberos";
+static const char locasberos_module_name[]="Locasberos";
 module AP_MODULE_DECLARE_DATA locasberos_module;
 
 typedef struct {
-  int bEnabled;
+  int b_enabled;
   unsigned int merged;
-  unsigned int CasCookieTimeout;
-  char *CasCookieName;
-  char *CasEndpoint;
-  char *CasService;
-  char *CasRenew;
-  apr_uri_t CasLoginURL;
-  apr_uri_t CasServiceValidateURL;
-} LocasberosConfig;
+  unsigned int cas_cookie_timeout;
+  char *cas_cookie_name;
+  char *cas_endpoint;
+  char *cas_service;
+  char *cas_renew;
+  apr_uri_t cas_login_url;
+  apr_uri_t cas_service;
+} locasberos_config;
 
-static void *LocasberosCreateServerConfig(apr_pool_t *p,server_rec *s) {
-  LocasberosConfig *pConfig=apr_pcalloc(p,sizeof *pConfig);
-  pConfig->bEnabled = 0;
-  pConfig->CasCookieTimeout = 3600;
-  pConfig->CasCookieName = "MOD_LOCASBEROS";
-  pConfig->CasEndpoint = NULL;
-  pConfig->CasService = NULL;
-  pConfig->CasRenew = NULL;
-  pConfig->CasLoginURL = NULL;
-  pConfig->CasServiceValidateURL = NULL;
+static void *locasberos_create_server_config(apr_pool_t *p, server_rec *s) {
+  locasberos_config *ptr_config=apr_pcalloc(p, sizeof *ptr_config);
+  ptr_config->b_enabled = 0;
+  ptr_config->cas_cookie_timeout = 3600;
+  ptr_config->cas_cookie_name = "MOD_LOCASBEROS";
+  ptr_config->cas_endpoint = NULL;
+  ptr_config->cas_service = NULL;
+  ptr_config->cas_renew = NULL;
+  ptr_config->cas_login_url = NULL;
+  ptr_config->cas_service = NULL;
 
-  return pConfig;
+  return ptr_config;
 }
 
-static void LocasberosInsertFilter(request_rec *r) {
-  LocasberosConfig *pConfig=ap_get_module_config(r->server->module_config,
+static void locasberos_insert_filter(request_rec *r) {
+  locasberos_config *ptr_config=ap_get_module_config(r->server->module_config,
       &locasberos_module);
 
-  if(!pConfig->bEnabled)
+  if(!ptr_config->b_enabled)
     return;
 
-  ap_add_input_filter(s_szLocasberosName,NULL,r,r->connection);
+  ap_add_input_filter(locasberos_module_name, NULL, r, r->connection);
 }
 
-static apr_status_t LocasberosOutFilter(ap_filter_t *f, apr_bucket_brigade *pbbIn) {
+static apr_status_t locasberos_input_filter(ap_filter_t *f, apr_bucket_brigade *pbbIn) {
   request_rec *r = f->r;
   conn_rec *c = r->connection;
   apr_bucket *pbktIn;
@@ -94,12 +94,12 @@ static apr_status_t LocasberosOutFilter(ap_filter_t *f, apr_bucket_brigade *pbbI
     if(APR_BUCKET_IS_EOS(pbktIn))
     {
       apr_bucket *pbktEOS=apr_bucket_eos_create(c->bucket_alloc);
-      APR_BRIGADE_INSERT_TAIL(pbbOut,pbktEOS);
+      APR_BRIGADE_INSERT_TAIL(pbbOut, pbktEOS);
       continue;
     }
 
     /* read */
-    apr_bucket_read(pbktIn,&data,&len,APR_BLOCK_READ);
+    apr_bucket_read(pbktIn, &data, &len, APR_BLOCK_READ);
 
     /* write */
     buf = apr_bucket_alloc(len, c->bucket_alloc);
@@ -108,39 +108,28 @@ static apr_status_t LocasberosOutFilter(ap_filter_t *f, apr_bucket_brigade *pbbI
 
     pbktOut = apr_bucket_heap_create(buf, len, apr_bucket_free,
         c->bucket_alloc);
-    APR_BRIGADE_INSERT_TAIL(pbbOut,pbktOut);
+    APR_BRIGADE_INSERT_TAIL(pbbOut, pbktOut);
   }
 
-  /* Q: is there any advantage to passing a brigade for each bucket?
-   * A: obviously, it can cut down server resource consumption, if this
-   * experimental module was fed a file of 4MB, it would be using 8MB for
-   * the 'read' buckets and the 'write' buckets.
-   *
-   * Note it is more efficient to consume (destroy) each bucket as it's
-   * processed above than to do a single cleanup down here.  In any case,
-   * don't let our caller pass the same buckets to us, twice;
-   */
   apr_brigade_cleanup(pbbIn);
-  return ap_pass_brigade(f->next,pbbOut);
+  return ap_pass_brigade(f->next, pbbOut);
 }
 
-static const char *LocasberosEnable(cmd_parms *cmd, void *dummy, int arg) {
-  LocasberosConfig *pConfig=ap_get_module_config(cmd->server->module_config,
-      &locasberos_module);
-  pConfig->bEnabled=arg;
+static const char *locasberos_enable(cmd_parms *cmd, void *dummy, int arg) {
+  locasberos_config *ptr_config=ap_get_module_config(cmd->server->module_config, &locasberos_module);
+  ptr_config->b_enabled=arg;
 
   return NULL;
 }
 
-static const command_rec LocasberosCmds[] = {
-  AP_INIT_FLAG("Locasberos", LocasberosEnable, NULL, RSRC_CONF,
-      "Validate CAS authentication for this host"),
+static const command_rec locasberos_cmds[] = {
+  AP_INIT_FLAG(locasberos_module_name, locasberos_enable, NULL, RSRC_CONF, "Validate CAS authentication for this host"),
   { NULL }
 };
 
-static void LocasberosRegisterHooks(apr_pool_t *p) {
-  ap_hook_insert_filter(LocasberosInsertFilter,NULL,NULL,APR_HOOK_MIDDLE);
-  ap_register_input_filter(s_szLocasberosName,LocasberosOutFilter,NULL, AP_FTYPE_RESOURCE);
+static void locasberos_register_hooks(apr_pool_t *p) {
+  ap_hook_insert_filter(locasberos_insert_filter, NULL, NULL, APR_HOOK_MIDDLE);
+  ap_register_input_filter(locasberos_module_name, locasberos_input_filter, NULL, AP_FTYPE_RESOURCE);
 }
 
 AP_DECLARE_MODULE(locasberos) = {
@@ -149,6 +138,6 @@ AP_DECLARE_MODULE(locasberos) = {
   NULL,
   LocasberosCreateServerConfig,
   NULL,
-  LocasberosCmds,
-  LocasberosRegisterHooks
+  locasberos_cmds,
+  locasberos_register_hooks
 };
