@@ -29,9 +29,21 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
+#include "misc.h"
 #include "alloca.h"
 
-void alloca_std(alloca_t *ptr) {
-  ptr->alloca_f  = malloc;
-  ptr->destroy_f = free;
+void *alloca_stdlib_malloc(void *_, size_t size) {
+  CASLIB_UNUSED(_);
+  return(malloc(size));
+}
+
+void alloca_stdlib_free(void *_, void *ptr) {
+  CASLIB_UNUSED(_);
+  free(ptr);
+}
+
+void alloca_stdlib(alloca_t *ptr) {
+  ptr->alloca_f  = alloca_stdlib_malloc;
+  ptr->destroy_f = alloca_stdlib_free;
+  ptr->data      = NULL;
 }

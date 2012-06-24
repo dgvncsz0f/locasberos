@@ -31,7 +31,13 @@
 #ifndef __LOCASBEROS_ALLOCA__
 #define __LOCASBEROS_ALLOCA__
 
-typedef struct {
+#define CASLIB_ALLOCA_F(a, s) a.alloca_f(a.data, s)
+#define CASLIB_ALLOCA_F_PTR(a, s) a->alloca_f(a->data, s)
+
+#define CASLIB_DESTROY_F(a, p) a.destroy_f(a.data, p)
+#define CASLIB_DESTROY_F_PTR(a, p) a->destroy_f(a->data, p)
+
+typedef struct alloca_t {
   /*! This function should allocate size bytes and return a pointer to
    *  the allocated memory.
    *
@@ -39,7 +45,7 @@ typedef struct {
    * \return The pointer to the allocated memory. It may also be NULL,
    *         which represents an error;
    */
-  void *(*alloca_f)(size_t size);
+  void *(*alloca_f)(void *, size_t size);
 
   /*! Frees memory used by a given pointer, which was allocated by
    *  alloca_f. It is considered an error to invoke this function
@@ -47,12 +53,16 @@ typedef struct {
    *
    * \param ptr Pointer to a memory allocated by alloca_f (might be NULL);
    */
-  void (*destroy_f)(void *ptr);
+  void (*destroy_f)(void *, void *ptr);
+
+  /*! Data-pointer that may be retrieved inside alloca_f or destroy_f functions.
+   */
+  void *data;
 
 } alloca_t;
 
-/*! Fill up the pointer with the system's standard memory allocation.
- */
-void alloca_std(alloca_t *ptr);
+void alloca_stdlib(alloca_t *ptr);
+void *alloca_stdlib_malloc(void *, size_t);
+void alloca_stdlib_free(void *, void *);
 
 #endif

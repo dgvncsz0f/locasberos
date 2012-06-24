@@ -33,4 +33,6 @@
 
 #define CASLIB_GOTOIF(a, b) { if (a) goto b; }
 
+#define CASLIB_UNUSED(x) (void)(x)
+
 #endif

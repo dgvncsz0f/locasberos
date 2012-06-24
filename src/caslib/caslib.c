@@ -81,7 +81,7 @@ int __joinparams(const caslib_t *cas, char *dest, size_t sz, int argv, ...) {
 
   va_start(args, argv);
   if (dest != NULL) {
-    fmtstr = cas->alloca.alloca_f(3*argv);
+    fmtstr = CASLIB_ALLOCA_F(cas->alloca, 3*argv);
     for (k=0; k<argv; k+=1) {
       if (k == 0)
         strncpy(fmtstr, "%s", 2);
@@ -97,7 +97,7 @@ int __joinparams(const caslib_t *cas, char *dest, size_t sz, int argv, ...) {
   }
   va_end(args);
 
-  cas->alloca.destroy_f(fmtstr);
+  CASLIB_DESTROY_F(cas->alloca, fmtstr);
   return(rc);
 }
 
@@ -129,10 +129,10 @@ char *__uencode_r(const caslib_t *cas, CURL *curl, const char *key, const char *
   size_t sz   = __uencode(curl, NULL, 0, key, val);
   char *param = NULL;
 
-  param = cas->alloca.alloca_f(sz);
+  param = CASLIB_ALLOCA_F(cas->alloca, sz);
   rc    = __uencode(curl, param, sz, key, val);
   if (rc == -1) {
-    cas->alloca.destroy_f(param);
+    CASLIB_DESTROY_F(cas->alloca, param);
     param = NULL;
   }
 
@@ -151,24 +151,25 @@ void caslib_global_destroy() {
 
 caslib_t *caslib_init(const char *endpoint) {
   alloca_t alloca;
-  alloca_std(&alloca);
+  alloca_stdlib(&alloca);
   return(caslib_init_with(endpoint, &alloca));
 }
 
 caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
-  caslib_t *p = ptr->alloca_f(sizeof(caslib_t));
+  caslib_t *p = CASLIB_ALLOCA_F_PTR(ptr, sizeof(caslib_t));
   CASLIB_GOTOIF(p==NULL, failure);
   p->endpoint             = NULL;
   p->service_validate_url = NULL;
   p->timeout              = 60;
   p->alloca.alloca_f      = ptr->alloca_f;
   p->alloca.destroy_f     = ptr->destroy_f;
+  p->alloca.data          = ptr->data;
 
-  p->endpoint = ptr->alloca_f(strlen(endpoint) + 1);
+  p->endpoint = CASLIB_ALLOCA_F_PTR(ptr, strlen(endpoint) + 1);
   CASLIB_GOTOIF(p->endpoint==NULL, failure);
   strcpy(p->endpoint, endpoint);
 
-  p->service_validate_url = ptr->alloca_f(strlen("/serviceValidate") + 1);
+  p->service_validate_url = CASLIB_ALLOCA_F_PTR(ptr, strlen("/serviceValidate") + 1);
   CASLIB_GOTOIF(p->service_validate_url==NULL, failure);
   strcpy(p->service_validate_url, "/serviceValidate");
 
@@ -198,7 +199,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   CASLIB_GOTOIF(curl==NULL, failure);
 
   sz  = strlen(cas->endpoint) + strlen(cas->service_validate_url);
-  url = cas->alloca.alloca_f(sz+1);
+  url = CASLIB_ALLOCA_F(cas->alloca, sz+1);
   CASLIB_GOTOIF(url==NULL, failure);
   rc  = snprintf(url, sz+1, "%s%s", cas->endpoint, cas->service_validate_url);
   CASLIB_GOTOIF(rc<0, failure);
@@ -208,7 +209,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   erenew   = __uencode_r(cas, curl, "renew", (renew ? "true" : "false"));
   rc       = __joinparams(cas, NULL, 0, 3, eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
-  reqbdy   = cas->alloca.alloca_f(rc);
+  reqbdy   = CASLIB_ALLOCA_F(cas->alloca, rc);
   CASLIB_GOTOIF(reqbdy==NULL, failure);
   rc       = __joinparams(cas, reqbdy, rc, 3, eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
@@ -229,7 +230,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   xmlParseChunk(ctxt, NULL, 0, 1);
   CASLIB_GOTOIF(! ctxt->wellFormed, failure);
 
-  rsp = cas->alloca.alloca_f(sizeof(caslib_rsp_t));
+  rsp = CASLIB_ALLOCA_F(cas->alloca, sizeof(caslib_rsp_t));
   CASLIB_GOTOIF(rsp==NULL, failure);
   rsp->xml    = ctxt->myDoc;
   rsp->status = 0;
@@ -237,18 +238,18 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   CASLIB_GOTOIF(true, release);
 
  failure:
-  cas->alloca.destroy_f(rsp);
+  CASLIB_DESTROY_F(cas->alloca, rsp);
   rsp = NULL;
   if (ctxt != NULL)
     xmlFreeDoc(ctxt->myDoc);
 
  release:
   xmlFreeParserCtxt(ctxt);
-  cas->alloca.destroy_f(reqbdy);
-  cas->alloca.destroy_f(erenew);
-  cas->alloca.destroy_f(eticket);
-  cas->alloca.destroy_f(eservice);
-  cas->alloca.destroy_f(url);
+  CASLIB_DESTROY_F(cas->alloca, reqbdy);
+  CASLIB_DESTROY_F(cas->alloca, erenew);
+  CASLIB_DESTROY_F(cas->alloca, eticket);
+  CASLIB_DESTROY_F(cas->alloca, eservice);
+  CASLIB_DESTROY_F(cas->alloca, url);
   curl_slist_free_all(headers);
   curl_easy_cleanup(curl);
 
@@ -258,16 +259,16 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
 void caslib_destroy(caslib_t *p) {
   if (p == NULL)
     return;
-  p->alloca.destroy_f(p->endpoint);
-  p->alloca.destroy_f(p->service_validate_url);
-  p->alloca.destroy_f(p);
+  CASLIB_DESTROY_F(p->alloca, p->endpoint);
+  CASLIB_DESTROY_F(p->alloca, p->service_validate_url);
+  CASLIB_DESTROY_F(p->alloca, p);
 }
 
 void caslib_rsp_destroy(caslib_t *c, caslib_rsp_t *p) {
   if (p == NULL)
     return;
   xmlFreeDoc(p->xml);
-  c->alloca.destroy_f(p);
+  CASLIB_DESTROY_F(c->alloca, p);
 }
 
 int caslib_rsp_auth(const caslib_rsp_t *p) {
