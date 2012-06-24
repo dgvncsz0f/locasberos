@@ -5,7 +5,7 @@ read -p "minor: " minor
 read -p "patch: " patch
 read -p "build: " build
 
-version="$major.$minor.$patch-$build"
+version="$major.$minor.$patch+build.$build"
 
 echo "v$version"
 
@@ -43,21 +43,16 @@ cat >src/caslib/version.h <<ENDL
 #ifndef __LOCASBEROS_VERSION__
 #define __LOCASBEROS_VERSION__
 
-// Changed if backwards incompatible changes are introduced to the
-// public API
-#define CASLIB_MAJOR $major 
+#define CASLIB_MAJOR $major
 
-// Changed if new, backwards compatible, functionality is introduced
-// to the public API
 #define CASLIB_MINOR $minor
 
-// Changed whenever backwards compatible bug fixes are introduced
 #define CASLIB_PATCH $patch
 
-// The build version
 #define CASLIB_BUILD $build
 
-// The string: "%d.%d.%d-%s", MAJOR, MINOR, PATCH, BUILD
+// Follow the semantic versioning way http://semver.org
+// The string: "%d.%d.%d+build.%s", MAJOR, MINOR, PATCH, BUILD
 #define CASLIB_VERSION "$version"
 
 #endif

@@ -40,4 +40,3 @@ int main(void)
   caslib_global_destroy();
   return(rc);
 }
-

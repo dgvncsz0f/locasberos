@@ -31,22 +31,17 @@
 #ifndef __LOCASBEROS_VERSION__
 #define __LOCASBEROS_VERSION__
 
-// Changed if backwards incompatible changes are introduced to the
-// public API
-#define CASLIB_MAJOR 0 
+#define CASLIB_MAJOR 0
 
-// Changed if new, backwards compatible, functionality is introduced
-// to the public API
 #define CASLIB_MINOR 1
 
-// Changed whenever backwards compatible bug fixes are introduced
 #define CASLIB_PATCH 0
 
-// The build version
 #define CASLIB_BUILD 1
 
-// The string: "%d.%d.%d-%s", MAJOR, MINOR, PATCH, BUILD
-#define CASLIB_VERSION "0.1.0-1"
+// Follow the semantic versioning way http://semver.org
+// The string: "%d.%d.%d+build.%s", MAJOR, MINOR, PATCH, BUILD
+#define CASLIB_VERSION "0.1.0+build.1"
 
 #endif
 
