@@ -42,7 +42,7 @@ static const char locasberos_module_name[]="Locasberos";
 module AP_MODULE_DECLARE_DATA locasberos_module;
 
 typedef struct {
-  int b_enabled;
+  int locasberos_enabled;
   unsigned int merged;
   unsigned int cas_cookie_timeout;
   char *cas_cookie_name;
@@ -55,7 +55,7 @@ typedef struct {
 
 static void *locasberos_create_server_config(apr_pool_t *p, server_rec *s) {
   locasberos_config *ptr_config=apr_pcalloc(p, sizeof *ptr_config);
-  ptr_config->b_enabled = 0;
+  ptr_config->locasberos_enabled = 0;
   ptr_config->cas_cookie_timeout = 3600;
   ptr_config->cas_cookie_name = "MOD_LOCASBEROS";
   ptr_config->cas_endpoint = NULL;
@@ -71,7 +71,7 @@ static void locasberos_insert_filter(request_rec *r) {
   locasberos_config *ptr_config=ap_get_module_config(r->server->module_config,
       &locasberos_module);
 
-  if(!ptr_config->b_enabled)
+  if(!ptr_config->locasberos_enabled)
     return;
 
   ap_add_input_filter(locasberos_module_name, NULL, r, r->connection);
@@ -91,8 +91,7 @@ static apr_status_t locasberos_input_filter(ap_filter_t *f, apr_bucket_brigade *
     apr_size_t n;
     apr_bucket *pbktOut;
 
-    if(APR_BUCKET_IS_EOS(pbktIn))
-    {
+    if(APR_BUCKET_IS_EOS(pbktIn)) {
       apr_bucket *pbktEOS=apr_bucket_eos_create(c->bucket_alloc);
       APR_BRIGADE_INSERT_TAIL(pbbOut, pbktEOS);
       continue;
@@ -117,7 +116,7 @@ static apr_status_t locasberos_input_filter(ap_filter_t *f, apr_bucket_brigade *
 
 static const char *locasberos_enable(cmd_parms *cmd, void *dummy, int arg) {
   locasberos_config *ptr_config=ap_get_module_config(cmd->server->module_config, &locasberos_module);
-  ptr_config->b_enabled=arg;
+  ptr_config->locasberos_enabled=arg;
 
   return NULL;
 }
