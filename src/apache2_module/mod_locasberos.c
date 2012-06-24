@@ -47,7 +47,6 @@ typedef struct {
   unsigned int cas_cookie_timeout;
   char *cas_cookie_name;
   char *cas_endpoint;
-  char *cas_service;
   char *cas_renew;
   apr_uri_t cas_login_url;
   apr_uri_t cas_service;
@@ -59,10 +58,7 @@ static void *locasberos_create_server_config(apr_pool_t *p, server_rec *s) {
   ptr_config->cas_cookie_timeout = 3600;
   ptr_config->cas_cookie_name = "MOD_LOCASBEROS";
   ptr_config->cas_endpoint = NULL;
-  ptr_config->cas_service = NULL;
   ptr_config->cas_renew = NULL;
-  ptr_config->cas_login_url = NULL;
-  ptr_config->cas_service = NULL;
 
   return ptr_config;
 }
@@ -131,11 +127,11 @@ static void locasberos_register_hooks(apr_pool_t *p) {
   ap_register_input_filter(locasberos_module_name, locasberos_input_filter, NULL, AP_FTYPE_RESOURCE);
 }
 
-AP_DECLARE_MODULE(locasberos) = {
+module AP_DECLARE_DATA locasberos = {
   STANDARD20_MODULE_STUFF,
   NULL,
   NULL,
-  LocasberosCreateServerConfig,
+  locasberos_create_server_config,
   NULL,
   locasberos_cmds,
   locasberos_register_hooks
