@@ -35,6 +35,10 @@
 #include "apr_lib.h"
 #include "util_filter.h"
 #include "http_request.h"
+
+#include "alloca.h"
+#include "caslib.h"
+
 #include <ctype.h>
 #include <stdbool.h>
 
