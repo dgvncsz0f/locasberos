@@ -43,7 +43,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 
-#define SELECT_IF_STRDEF(a, b, m) (a->m==NULL ? b->m : a->m)
+#define SELECT_IF_PTRDEF(a, b, m) (a->m==NULL ? b->m : a->m)
 #define SELECT_IF_INTDEF(a, b, m) (a->m==-1 ? b->m : a ->m)
 
 typedef struct {
@@ -94,13 +94,13 @@ void *locasberos_cfg_merge(apr_pool_t *pool, void *vbase, void *vadd) {
   mod_locasberos_t *cfg  = (mod_locasberos_t *) apr_palloc(pool, sizeof(mod_locasberos_t));
 
   cfg->enabled             = SELECT_IF_INTDEF(add, base, enabled);
-  cfg->cas_endpoint        = SELECT_IF_STRDEF(add, base, cas_endpoint);
-  cfg->cas_login_url       = SELECT_IF_STRDEF(add, base, cas_login_url);
-  cfg->cas_srvvalidate_url = SELECT_IF_STRDEF(add, base, cas_srvvalidate_url);
-  cfg->cookie_name         = SELECT_IF_STRDEF(add, base, cookie_name);
-  cfg->cookie_path         = SELECT_IF_STRDEF(add, base, cookie_path);
+  cfg->cas_endpoint        = SELECT_IF_PTRDEF(add, base, cas_endpoint);
+  cfg->cas_login_url       = SELECT_IF_PTRDEF(add, base, cas_login_url);
+  cfg->cas_srvvalidate_url = SELECT_IF_PTRDEF(add, base, cas_srvvalidate_url);
+  cfg->cookie_name         = SELECT_IF_PTRDEF(add, base, cookie_name);
+  cfg->cookie_path         = SELECT_IF_PTRDEF(add, base, cookie_path);
   cfg->cookie_timeout      = SELECT_IF_INTDEF(add, base, cookie_timeout);
-  cfg->cas_service         = SELECT_IF_STRDEF(add, base, cas_service);
+  cfg->cas_service         = SELECT_IF_PTRDEF(add, base, cas_service);
   cfg->cas_renew           = SELECT_IF_INTDEF(add, base, cas_renew);
 
   return(cfg);
