@@ -8,11 +8,12 @@ export CFLAGS        =
 export LDFLAGS       = 
 export LIBTOOLFLAGS  = --silent
 
+export APXS          = apxs
 export CC            = gcc
 export CXX           = g++
 export LIBTOOL       = libtool
 
-compile: .compile-caslib
+compile: .compile-caslib .compile-dso
 
 link: .link-caslib
 
@@ -49,6 +50,11 @@ clean:
 
 .compile-caslib:
 	@$(MAKE) -C $(cfg_srcdir)/caslib compile
+
+.compile-dso: .compile-apache
+
+.compile-apache:
+	@$(MAKE) -C $(cfg_srcdir)/apache2_module compile
 
 .link-caslib:
 	@$(MAKE) -C $(cfg_srcdir)/caslib link

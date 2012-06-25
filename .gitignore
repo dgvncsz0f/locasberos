@@ -1,6 +1,7 @@
 *.o
 *.lo
 *.la
+*.slo
 .libs/
 doc/build/
 dist/

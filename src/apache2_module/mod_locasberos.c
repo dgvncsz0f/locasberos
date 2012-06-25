@@ -35,104 +35,138 @@
 #include "apr_lib.h"
 #include "util_filter.h"
 #include "http_request.h"
-
 #include <ctype.h>
+#include <stdbool.h>
 
-static const char locasberos_module_name[]="Locasberos";
-module AP_MODULE_DECLARE_DATA locasberos_module;
+#define SELECT_IF_STRDEF(a, b, m) (a->m==NULL ? b->m : a->m)
+#define SELECT_IF_INTDEF(a, b, m) (a->m==-1 ? b->m : a ->m)
 
 typedef struct {
-  int locasberos_enabled;
-  unsigned int merged;
-  unsigned int cas_cookie_timeout;
-  char *cas_cookie_name;
+  int enabled;
   char *cas_endpoint;
-  char *cas_renew;
-  apr_uri_t cas_login_url;
-  apr_uri_t cas_service;
-} locasberos_config;
+  char *cas_login_url;
+  char *cas_srvvalidate_url;
+  char *cookie_name;
+  unsigned int cookie_timeout;
+  char *cookie_path;
+  char *cas_service;
+  int cas_renew;
+} mod_locasberos_t;
 
-static void *locasberos_create_server_config(apr_pool_t *p, server_rec *s) {
-  locasberos_config *ptr_config=apr_pcalloc(p, sizeof *ptr_config);
-  ptr_config->locasberos_enabled = 0;
-  ptr_config->cas_cookie_timeout = 3600;
-  ptr_config->cas_cookie_name = "MOD_LOCASBEROS";
-  ptr_config->cas_endpoint = NULL;
-  ptr_config->cas_renew = NULL;
-
-  return ptr_config;
+static inline
+void locasberos_init_cfg(mod_locasberos_t *cfg) {
+  cfg->enabled             = -1;
+  cfg->cas_endpoint        = NULL;
+  cfg->cas_login_url       = NULL;
+  cfg->cas_srvvalidate_url = NULL;
+  cfg->cookie_name         = NULL;
+  cfg->cookie_timeout      = -1;
+  cfg->cookie_path         = NULL;
+  cfg->cas_service         = NULL;
+  cfg->cas_renew           = -1;
 }
 
-static void locasberos_insert_filter(request_rec *r) {
-  locasberos_config *ptr_config=ap_get_module_config(r->server->module_config,
-      &locasberos_module);
-
-  if(!ptr_config->locasberos_enabled)
-    return;
-
-  ap_add_input_filter(locasberos_module_name, NULL, r, r->connection);
+static
+void *locasberos_cfg_new_srv(apr_pool_t *pool, server_rec *s) {
+  mod_locasberos_t *cfg = apr_palloc(pool, sizeof(mod_locasberos_t));
+  if (cfg != NULL)
+    locasberos_init_cfg(cfg);
+  return(cfg);
 }
 
-static apr_status_t locasberos_input_filter(ap_filter_t *f, apr_bucket_brigade *pbbIn) {
-  request_rec *r = f->r;
-  conn_rec *c = r->connection;
-  apr_bucket *pbktIn;
-  apr_bucket_brigade *pbbOut;
-
-  pbbOut=apr_brigade_create(r->pool, c->bucket_alloc);
-  for (pbktIn = APR_BRIGADE_FIRST(pbbIn); pbktIn != APR_BRIGADE_SENTINEL(pbbIn); pbktIn = APR_BUCKET_NEXT(pbktIn)) {
-    const char *data;
-    apr_size_t len;
-    char *buf;
-    apr_size_t n;
-    apr_bucket *pbktOut;
-
-    if(APR_BUCKET_IS_EOS(pbktIn)) {
-      apr_bucket *pbktEOS=apr_bucket_eos_create(c->bucket_alloc);
-      APR_BRIGADE_INSERT_TAIL(pbbOut, pbktEOS);
-      continue;
-    }
-
-    /* read */
-    apr_bucket_read(pbktIn, &data, &len, APR_BLOCK_READ);
-
-    /* write */
-    buf = apr_bucket_alloc(len, c->bucket_alloc);
-    for(n=0 ; n < len ; ++n)
-      buf[n] = apr_toupper(data[n]);
-
-    pbktOut = apr_bucket_heap_create(buf, len, apr_bucket_free,
-        c->bucket_alloc);
-    APR_BRIGADE_INSERT_TAIL(pbbOut, pbktOut);
-  }
-
-  apr_brigade_cleanup(pbbIn);
-  return ap_pass_brigade(f->next, pbbOut);
+static
+void *locasberos_cfg_new_dir(apr_pool_t *pool, char *d) {
+  mod_locasberos_t *cfg = apr_palloc(pool, sizeof(mod_locasberos_t));
+  if (cfg != NULL)
+    locasberos_init_cfg(cfg);
+  return(cfg);
 }
 
-static const char *locasberos_enable(cmd_parms *cmd, void *dummy, int arg) {
-  locasberos_config *ptr_config=ap_get_module_config(cmd->server->module_config, &locasberos_module);
-  ptr_config->locasberos_enabled=arg;
+static
+void *locasberos_cfg_merge(apr_pool_t *pool, void *vbase, void *vadd) {
+  mod_locasberos_t *base = (mod_locasberos_t *) vbase;
+  mod_locasberos_t *add  = (mod_locasberos_t *) vadd;
+  mod_locasberos_t *cfg  = (mod_locasberos_t *) apr_palloc(pool, sizeof(mod_locasberos_t));
 
-  return NULL;
+  cfg->enabled             = SELECT_IF_INTDEF(add, base, enabled);
+  cfg->cas_endpoint        = SELECT_IF_STRDEF(add, base, cas_endpoint);
+  cfg->cas_login_url       = SELECT_IF_STRDEF(add, base, cas_login_url);
+  cfg->cas_srvvalidate_url = SELECT_IF_STRDEF(add, base, cas_srvvalidate_url);
+  cfg->cookie_name         = SELECT_IF_STRDEF(add, base, cookie_name);
+  cfg->cookie_path         = SELECT_IF_STRDEF(add, base, cookie_path);
+  cfg->cookie_timeout      = SELECT_IF_INTDEF(add, base, cookie_timeout);
+  cfg->cas_service         = SELECT_IF_STRDEF(add, base, cas_service);
+  cfg->cas_renew           = SELECT_IF_INTDEF(add, base, cas_renew);
+
+  return(cfg);
 }
 
-static const command_rec locasberos_cmds[] = {
-  AP_INIT_FLAG(locasberos_module_name, locasberos_enable, NULL, RSRC_CONF, "Validate CAS authentication for this host"),
+static
+int locasberos_authenticate(request_rec *r) {
+  return(HTTP_FORBIDDEN);
+}
+
+static
+const command_rec locasberos_cmds[] = {
+  // TODO: allow per-server config?
+  AP_INIT_FLAG("CasEnabled",
+               ap_set_flag_slot,
+               (void *) APR_OFFSETOF(mod_locasberos_t, enabled),
+               OR_ALL,
+               "Enable/Disable the module"),
+  AP_INIT_TAKE1("CasEndpoint",
+                ap_set_string_slot_lower,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cas_endpoint),
+                OR_ALL,
+                "Define the CAS endpoint to use"),
+  AP_INIT_TAKE1("CasLoginUrl",
+                ap_set_string_slot_lower,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cas_login_url),
+                OR_ALL,
+                "The CAS service validate URL to use"),
+  AP_INIT_TAKE1("CasServiceValidateUrl",
+                ap_set_string_slot_lower,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cas_srvvalidate_url),
+                OR_ALL,
+                "The CAS service validate URL to use"),
+  AP_INIT_TAKE1("CasCookieName",
+                ap_set_string_slot_lower,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cookie_name),
+                OR_ALL,
+                "Define the cookie name to use"),
+  AP_INIT_TAKE1("CasCookieTimeout",
+                ap_set_int_slot,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cookie_timeout),
+                OR_ALL,
+                "Define the cookie expiration (in seconds)"),
+  AP_INIT_TAKE1("CasCookiePath",
+                ap_set_string_slot_lower,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cookie_path),
+                OR_ALL,
+                "Define the cookie path to use when issuing/validating the cookie"),
+  AP_INIT_TAKE1("CasService",
+                ap_set_string_slot_lower,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cas_service),
+                OR_ALL,
+                "Define the CAS service to use when validating the service ticket"),
+  AP_INIT_FLAG("CasRenew",
+                ap_set_flag_slot,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cas_renew),
+                OR_ALL,
+                "Define whether or not setting the renew flag when validating the service ticket"),
   { NULL }
 };
 
-static void locasberos_register_hooks(apr_pool_t *p) {
-  ap_hook_insert_filter(locasberos_insert_filter, NULL, NULL, APR_HOOK_MIDDLE);
-  ap_register_input_filter(locasberos_module_name, locasberos_input_filter, NULL, AP_FTYPE_RESOURCE);
+static void locasberos_hooks(apr_pool_t *p) {
+  ap_hook_check_user_id(locasberos_authenticate, NULL, NULL, APR_HOOK_MIDDLE);
 }
 
-module AP_DECLARE_DATA locasberos = {
+module AP_DECLARE_DATA locasberos_module = {
   STANDARD20_MODULE_STUFF,
-  NULL,
-  NULL,
-  locasberos_create_server_config,
-  NULL,
+  locasberos_cfg_new_dir,
+  locasberos_cfg_merge,
+  locasberos_cfg_new_srv,
+  locasberos_cfg_merge,
   locasberos_cmds,
-  locasberos_register_hooks
+  locasberos_hooks
 };
