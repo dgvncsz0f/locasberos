@@ -18,6 +18,7 @@ Configuration Directives (sketch)
 * CasCookieName
 * CasCookieTimeout
 * CasCookiePath
+* CasCookieDomain
 
 Dependencies
 ============
