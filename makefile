@@ -33,10 +33,10 @@ install-try: .setup_env link-try
 	@$(MAKE) -C $(cfg_trydir)/caslib install
 
 compile-modapache: install-caslib
-	@$(MAKE) -C $(cfg_srcdir)/apache2_module compile
+	@$(MAKE) -C $(cfg_srcdir)/apache compile
 
 install-modapache: .setup_env compile-modapache
-	@$(MAKE) -C $(cfg_srcdir)/apache2_module install
+	@$(MAKE) -C $(cfg_srcdir)/apache install
 
 release:
 	$(cfg_srcdir)/mkversion.h
