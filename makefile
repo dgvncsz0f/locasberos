@@ -3,9 +3,9 @@ export root          = $(CURDIR)/dist
 export cfg_srcroot   = $(CURDIR)
 export cfg_srcdir    = $(cfg_srcroot)/src
 export cfg_trydir    = $(cfg_srcroot)/try
-export CCFLAGS       = 
-export CFLAGS        = 
-export LDFLAGS       = 
+export CCFLAGS       =
+export CFLAGS        =
+export LDFLAGS       =
 export LIBTOOLFLAGS  = --silent
 
 export APXS          = apxs
@@ -33,10 +33,12 @@ clean:
 	-find $(cfg_srcdir) -type f -name \*.o -exec $(RM) \{\} \;
 	-find $(cfg_srcdir) -type f -name \*.a -exec $(RM) \{\} \;
 	-find $(cfg_srcdir) -type f -name \*.lo -exec $(RM) \{\} \;
+	-find $(cfg_srcdir) -type f -name \*.slo -exec $(RM) \{\} \;
 	-find $(cfg_srcdir) -type f -name \*.la -exec $(RM) \{\} \;
 	-find $(cfg_trydir) -type f -name \*.o -exec $(RM) \{\} \;
 	-find $(cfg_trydir) -type f -name \*.a -exec $(RM) \{\} \;
 	-find $(cfg_trydir) -type f -name \*.lo -exec $(RM) \{\} \;
+	-find $(cfg_trydir) -type f -name \*.slo -exec $(RM) \{\} \;
 	-find $(cfg_trydir) -type f -name \*.la -exec $(RM) \{\} \;
 	-$(RM) -r $$(find $(cfg_trydir) -type d -name .libs)
 	-$(RM) -r $$(find $(cfg_srcdir) -type d -name .libs)
