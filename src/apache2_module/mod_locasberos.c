@@ -36,8 +36,9 @@
 #include "util_filter.h"
 #include "http_request.h"
 
-#include "alloca.h"
-#include "caslib.h"
+#include "caslib/misc.h"
+#include "caslib/alloca.h"
+#include "caslib/caslib.h"
 
 #include <ctype.h>
 #include <stdbool.h>
@@ -161,7 +162,16 @@ const command_rec locasberos_cmds[] = {
   { NULL }
 };
 
-static void locasberos_hooks(apr_pool_t *p) {
+static
+apr_status_t __caslib_global_destroy(void *_) {
+  CASLIB_UNUSED(_);
+  caslib_global_destroy();
+  return(OK);
+}
+
+static void locasberos_hooks(apr_pool_t *pool) {
+  caslib_global_init();
+  apr_pool_cleanup_register(pool, NULL, __caslib_global_destroy, apr_pool_cleanup_null);
   ap_hook_check_user_id(locasberos_authenticate, NULL, NULL, APR_HOOK_MIDDLE);
 }
 

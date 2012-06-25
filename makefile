@@ -1,32 +1,47 @@
 
-export root          = $(CURDIR)/dist
-export cfg_srcroot   = $(CURDIR)
-export cfg_srcdir    = $(cfg_srcroot)/src
-export cfg_trydir    = $(cfg_srcroot)/try
-export CCFLAGS       =
-export CFLAGS        =
-export LDFLAGS       =
-export LIBTOOLFLAGS  = --silent
+export root            = $(CURDIR)/dist
+export cfg_srcroot     = $(CURDIR)
+export cfg_srcdir      = $(cfg_srcroot)/src
+export cfg_trydir      = $(cfg_srcroot)/try
+export apxs_libexecdir = $(addprefix $(root), $(shell $(APXS) -q LIBEXECDIR))
+export CCFLAGS         =
+export CFLAGS          =
+export LDFLAGS         =
+export LIBTOOLFLAGS    = --silent
 
 export APXS          = apxs
 export CC            = gcc
 export CXX           = g++
 export LIBTOOL       = libtool
 
-compile: .compile-caslib .compile-dso
+compile-caslib:
+	@$(MAKE) -C $(cfg_srcdir)/caslib compile
 
-link: .link-caslib
+link-caslib: compile-caslib
+	@$(MAKE) -C $(cfg_srcdir)/caslib link
 
-link-try: link .link-try
+install-caslib: .setup_env link-caslib
+	@$(MAKE) -C $(cfg_srcdir)/caslib install
 
-install: .setup_env .install-caslib
+compile-try:
+	@$(MAKE) -C $(cfg_trydir)/caslib compile
 
-install-try: install .install-try
+link-try: link-caslib compile-try
+	@$(MAKE) -C $(cfg_trydir)/caslib link
+
+install-try: .setup_env link-try
+	@$(MAKE) -C $(cfg_trydir)/caslib install
+
+compile-modapache: install-caslib
+	@$(MAKE) -C $(cfg_srcdir)/apache2_module compile
+
+install-modapache: .setup_env compile-modapache
+	@$(MAKE) -C $(cfg_srcdir)/apache2_module install
 
 release:
 	$(cfg_srcdir)/mkversion.h
 
-test: .link-try
+try-caslib: link-try
 	env MALLOC_CHECK_=1 $(cfg_trydir)/caslib/try_caslib_dbg
 
 clean:
@@ -44,32 +59,10 @@ clean:
 	-$(RM) -r $$(find $(cfg_srcdir) -type d -name .libs)
 	-$(RM) $(cfg_trydir)/caslib/try_caslib_dbg
 
-.install-caslib:
-	@$(MAKE) -C $(cfg_srcdir)/caslib install
-
-.test-caslib:
-	@$(MAKE) -C $(cfg_srcdir)/caslib test
-
-.compile-caslib:
-	@$(MAKE) -C $(cfg_srcdir)/caslib compile
-
-.compile-dso: .compile-apache
-
-.compile-apache:
-	@$(MAKE) -C $(cfg_srcdir)/apache2_module compile
-
-.link-caslib:
-	@$(MAKE) -C $(cfg_srcdir)/caslib link
-
-.install-try: .link-try
-	@$(MAKE) -C $(cfg_trydir)/caslib install
-
-.link-try: .link-caslib
-	@$(MAKE) -C $(cfg_trydir)/caslib link
-
 .setup_env:
-	@test -d $(root)         || mkdir $(root)
-	@test -d $(root)/usr     || mkdir $(root)/usr
-	@test -d $(root)/usr/lib || mkdir $(root)/usr/lib
-	@test -d $(root)/usr/bin || mkdir $(root)/usr/bin
+	@test -d $(root)            || mkdir $(root)
+	@test -d $(root)/usr        || mkdir $(root)/usr
+	@test -d $(root)/usr/lib    || mkdir $(root)/usr/lib
+	@test -d $(root)/usr/bin    || mkdir $(root)/usr/bin
+	@test -d $(apxs_libexecdir) || mkdir -p $(apxs_libexecdir)
 
