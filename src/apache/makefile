@@ -1,8 +1,15 @@
 
+my_libexecdir = $(addprefix $(root), $(apxs_libexecdir))
+la_module     = $(cfg_srcdir)/apache/mod_locasberos.la 
+
 .PHONY: compile
-compile:
-	$(APXS) -c -I$(cfg_srcdir) -L$(root)/usr/lib -lcaslib $(cfg_srcdir)/apache/mod_locasberos.c
+compile: $(la_module)
 
 .PHONY: install
-install:
-	$(LIBTOOL) --mode=install cp $(cfg_srcdir)/apache/mod_locasberos.la $(addprefix $(root), $(apxs_libexecdir))
+install: $(la_module)
+	$(LIBTOOL) --mode=install cp $^ $(my_libexecdir)
+
+%.la: %.c
+	$(APXS) -c -I$(cfg_srcdir) -L$(root)/usr/lib -lcaslib $^
+
+.SUFFIX: .la
