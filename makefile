@@ -44,6 +44,9 @@ release:
 try-caslib: link-try
 	env MALLOC_CHECK_=1 $(cfg_trydir)/caslib/try_caslib_dbg
 
+try-modapache: install-modapache
+	cd $(cfg_trydir)/apache && rspec -O ~/rspec.opts -P "spec/**/*_spec.rb"
+
 clean:
 	-find $(cfg_srcdir) -type f -name \*.o -exec $(RM) \{\} \;
 	-find $(cfg_srcdir) -type f -name \*.a -exec $(RM) \{\} \;
