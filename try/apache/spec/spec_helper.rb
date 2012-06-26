@@ -69,7 +69,7 @@ def mod_auth
 end
 
 def mod_locasberos
-  "LoadModule locasberos_module " + $root + "/usr/lib/apache2/modules/mod_locasberos.so"
+  "LoadModule locasberos_module " + $root + $libexecdir + "/mod_locasberos.so"
 end
 
 def clean(server_root)
