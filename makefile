@@ -67,5 +67,5 @@ clean:
 	@test -d $(root)/usr        || mkdir $(root)/usr
 	@test -d $(root)/usr/lib    || mkdir $(root)/usr/lib
 	@test -d $(root)/usr/bin    || mkdir $(root)/usr/bin
-	@test -d $(apxs_libexecdir) || mkdir -p $(apxs_libexecdir)
+	@test -d $(root)/$(apxs_libexecdir) || mkdir -p $(root)/$(apxs_libexecdir)
 
