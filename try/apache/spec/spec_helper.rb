@@ -37,6 +37,7 @@ require "bundler/setup"
 require "httparty"
 
 $root        = File.expand_path(File.dirname(__FILE__) + "/../../../dist")
+$libexecdir  = ENV["apxs_libexecdir"]
 $listen_host = "127.0.0.1"
 $listen_port = 9999
 $endpoint    = "http://" + $listen_host + ":" + $listen_port.to_s
@@ -59,11 +60,11 @@ def vhost_end
 end
 
 def mod_auth
-  [ "LoadModule auth_basic_module /usr/lib/apache2/modules/mod_auth_basic.so",
-    "LoadModule authn_file_module /usr/lib/apache2/modules/mod_authn_file.so",
-    "LoadModule authz_user_module /usr/lib/apache2/modules/mod_authz_user.so",
-    "LoadModule authz_default_module /usr/lib/apache2/modules/mod_authz_default.so",
-    "LoadModule authz_host_module /usr/lib/apache2/modules/mod_authz_host.so"
+  [ "LoadModule auth_basic_module "+ $libexecdir +"/mod_auth_basic.so",
+    "LoadModule authn_file_module "+ $libexecdir +"/mod_authn_file.so",
+    "LoadModule authz_user_module "+ $libexecdir +"/mod_authz_user.so",
+    "LoadModule authz_default_module "+ $libexecdir +"/mod_authz_default.so",
+    "LoadModule authz_host_module "+ $libexecdir +"/mod_authz_host.so"
   ]
 end
 

@@ -3,7 +3,7 @@ export root            = $(CURDIR)/dist
 export cfg_srcroot     = $(CURDIR)
 export cfg_srcdir      = $(cfg_srcroot)/src
 export cfg_trydir      = $(cfg_srcroot)/try
-export apxs_libexecdir = $(addprefix $(root), $(shell $(APXS) -q LIBEXECDIR))
+export apxs_libexecdir = $(shell $(APXS) -q LIBEXECDIR)
 export CCFLAGS         =
 export CFLAGS          =
 export LDFLAGS         =
@@ -41,11 +41,11 @@ install-modapache: .setup_env compile-modapache
 release:
 	$(cfg_srcdir)/mkversion.h
 
-try-caslib: link-try
+test-caslib: link-try
 	env MALLOC_CHECK_=1 $(cfg_trydir)/caslib/try_caslib_dbg
 
-try-modapache: install-modapache
-	cd $(cfg_trydir)/apache && rspec -O ~/rspec.opts -P "spec/**/*_spec.rb"
+test-modapache: install-modapache
+	cd $(cfg_trydir)/apache && env apxs_libexecdir="$(apxs_libexecdir)" rspec -O ~/rspec.opts -P "spec/**/*_spec.rb"
 
 clean:
 	-find $(cfg_srcdir) -type f -name \*.o -exec $(RM) \{\} \;

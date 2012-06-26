@@ -5,4 +5,4 @@ compile:
 
 .PHONY: install
 install:
-	$(LIBTOOL) --mode=install cp $(cfg_srcdir)/apache/mod_locasberos.la $(apxs_libexecdir)
+	$(LIBTOOL) --mode=install cp $(cfg_srcdir)/apache/mod_locasberos.la $(addprefix $(root), $(apxs_libexecdir))
