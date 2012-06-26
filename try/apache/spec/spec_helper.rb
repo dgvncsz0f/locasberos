@@ -41,13 +41,35 @@ $listen_host = "127.0.0.1"
 $listen_port = 9999
 $endpoint    = "http://" + $listen_host + ":" + $listen_port.to_s
 
-$mod_auth_basic = [ "LoadModule auth_basic_module /usr/lib/apache2/modules/mod_auth_basic.so",
-                    "LoadModule authn_file_module /usr/lib/apache2/modules/mod_authn_file.so",
-                    "LoadModule authz_user_module /usr/lib/apache2/modules/mod_authz_user.so"
-                  ]
-$mod_locasberos = [ "LoadModule locasberos_module " + $root + "/usr/lib/apache2/modules/mod_locasberos.so"
-                  ]
+def url4(path, vhost=nil)
+  name = (vhost.nil? ? $listen_host : vhost)
+  if (vhost.nil?)
+    "http://" + name + ":" + $listen_port.to_s + path
+  else
+    "http://" + name + ":" + $listen_port.to_s + path
+  end
+end
 
+def vhost_begin
+  "<VirtualHost *:" + $listen_port.to_s + ">"
+end
+
+def vhost_end
+  "</VirtualHost>"
+end
+
+def mod_auth
+  [ "LoadModule auth_basic_module /usr/lib/apache2/modules/mod_auth_basic.so",
+    "LoadModule authn_file_module /usr/lib/apache2/modules/mod_authn_file.so",
+    "LoadModule authz_user_module /usr/lib/apache2/modules/mod_authz_user.so",
+    "LoadModule authz_default_module /usr/lib/apache2/modules/mod_authz_default.so",
+    "LoadModule authz_host_module /usr/lib/apache2/modules/mod_authz_host.so"
+  ]
+end
+
+def mod_locasberos
+  "LoadModule locasberos_module " + $root + "/usr/lib/apache2/modules/mod_locasberos.so"
+end
 
 def clean(server_root)
   FileUtils.rm_rf(server_root)
@@ -58,14 +80,18 @@ def configure(config=[], apachebin="/usr/sbin/apache2")
   tmp_root      = File.expand_path(File.dirname(__FILE__) + "/../../tmp")
   server_root   = Dir.mktmpdir(nil, tmp_root)
   myconfig      = config.flatten.join("\n")
-  template      = [ "Listen " + $listen_host + ":" + $listen_port.to_s,
+  template      = [ mod_auth,
+                    "Listen " + $listen_host + ":" + $listen_port.to_s,
                     "NameVirtualHost *:" + $listen_port.to_s,
                     "<VirtualHost *:" + $listen_port.to_s + ">",
                     "  DocumentRoot v_www",
-                    "</VirtualHost>"
+                    "</VirtualHost>",
+                    "<Location />",
+                    " Order allow,deny",
+                    " Allow from all",
+                    "</Location>",
+                    File.open(fixtures_root + "/apache.cfg", "r") {|f| f.read().gsub(/\{config\}/, myconfig)}
                   ].join("\n")
-  template     += "\n"
-  template     += File.open(fixtures_root + "/apache.cfg", "r") {|f| f.read().gsub(/\{config\}/, myconfig)}
 
   FileUtils.mkdir_p(server_root + "/logs")
   FileUtils.mkdir_p(server_root + "/www")
@@ -80,15 +106,14 @@ end
 
 def apache_start(server_root, apachebin="/usr/bin/apache2")
   cmd = apachebin +
-        " -X" +
         " -k start" +
         " -f "+ server_root +"/apache.cfg" +
         " -d "+ server_root
-  handle = IO.popen(cmd)
+  IO.popen(cmd) { Process.wait }
   25.times do
     begin
       TCPSocket.new($listen_host, $listen_port).close()
-      return(handle)
+      return
     rescue
     end
     sleep(0.2)
@@ -110,7 +135,7 @@ def with_apache(config=[], apachebin="/usr/sbin/apache2", &proc)
   begin
     apache_start(server_root, apachebin)
     begin
-      proc.call($endpoint)
+      proc.call()
     ensure
       apache_stop(server_root, apachebin)
     end

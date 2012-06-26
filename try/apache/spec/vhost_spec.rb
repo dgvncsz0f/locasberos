@@ -36,14 +36,17 @@ require "httparty"
 describe :vhost do
 
   it "should reply 403 for unauthenticated requests" do
-    with_apache([ $mod_locasberos,
-                  "<Location />",
-                  "  CASEnabled On",
+    with_apache([ mod_locasberos,
+                  vhost_begin,
+                  " ServerName localhost",
+                  " CASEnabled On",
+                  " <Location /index.txt>",
                   "  AuthType locasberos",
                   "  Require valid-user",
-                  "</Location>"
-                ]) do |endpoint|
-      response = HTTParty.get(endpoint + "/index.txt")
+                  " </Location>",
+                  vhost_end
+                ]) do
+      response = HTTParty.get(url4("/index.txt", "localhost"))
       response.code.should == 403
     end
   end

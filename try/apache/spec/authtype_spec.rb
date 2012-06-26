@@ -35,17 +35,16 @@ require "spec_helper.rb"
 describe :authtype do
 
   it "must not interfere with other authentication methods" do
-    with_apache([ $mod_auth_basic,
-                  $mod_locasberos,
+    with_apache([ mod_locasberos,
                   "<Location />",
-                  "  CASEnabled On",
-                  "  AuthType Basic",
-                  "  AuthName \"rspec\"",
-                  "  AuthUserFile passwd.db",
-                  "  Require valid-user",
+                  " CASEnabled On",
+                  " AuthType Basic",
+                  " AuthName \"rspec\"",
+                  " AuthUserFile passwd.db",
+                  " Require valid-user",
                   "</Location>"
-                ]) do |endpoint|
-      response = AuthBasicHTTP.get(endpoint + "/index.txt")
+                ]) do
+      response = AuthBasicHTTP.get(url4("/index.txt"))
       response.code.should == 200
     end
   end
