@@ -44,11 +44,7 @@ $endpoint    = "http://" + $listen_host + ":" + $listen_port.to_s
 
 def url4(path, vhost=nil)
   name = (vhost.nil? ? $listen_host : vhost)
-  if (vhost.nil?)
-    "http://" + name + ":" + $listen_port.to_s + path
-  else
-    "http://" + name + ":" + $listen_port.to_s + path
-  end
+  "http://" + name + ":" + $listen_port.to_s + path
 end
 
 def vhost_begin
