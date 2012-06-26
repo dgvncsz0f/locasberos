@@ -129,6 +129,14 @@ def apache_stop(server_root, apachebin="/usr/bin/apache2")
         " -d "+ server_root +
         " 2>&1"
   IO.popen(cmd) { Process.wait }
+  25.times do
+    begin
+      TCPSocket.new($listen_host, $listen_port).close()
+    rescue
+      return
+    end
+    sleep(0.2)
+  end
 end
 
 def with_apache(config=[], apachebin="/usr/sbin/apache2", &proc)
