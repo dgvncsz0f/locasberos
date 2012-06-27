@@ -41,7 +41,7 @@ def find_x(*candidates)
 end
 
 $root        = File.expand_path(File.dirname(__FILE__) + "/../../../dist")
-$bin_apxs    = find_x("/usr/bin/apxs", "/usr/bin/apxs2")
+$bin_apxs    = find_x("/usr/sbin/apxs",  "/usr/bin/apxs", "/usr/sbin/apxs2", "/usr/bin/apxs2")
 $bin_httpd   = find_x("/usr/sbin/httpd", "/usr/bin/httpd", "/usr/sbin/apache2", "/usr/bin/apache2")
 $listen_host = "127.0.0.1"
 $listen_port = 9999
