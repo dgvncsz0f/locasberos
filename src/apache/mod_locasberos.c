@@ -36,6 +36,8 @@
 #include "util_filter.h"
 #include "http_request.h"
 
+#include "mod_locasberos.h"
+
 #include "caslib/misc.h"
 #include "caslib/alloca.h"
 #include "caslib/caslib.h"
@@ -123,6 +125,7 @@ static
 int locasberos_authenticate(request_rec *r) {
   alloca_t alloca;
   locasberos_alloca(NULL, &alloca);
+  caslib_t *caslib = ap_get_module_config(r->server->module_config, &locasberos_module);
   return(HTTP_FORBIDDEN);
 }
 
