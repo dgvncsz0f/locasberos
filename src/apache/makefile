@@ -1,6 +1,6 @@
 
 my_libexecdir = $(addprefix $(root), $(apxs_libexecdir))
-la_module     = $(cfg_srcdir)/apache/mod_locasberos.la 
+la_module     = $(cfg_srcdir)/apache/mod_locasberos.la
 
 .PHONY: compile
 compile: $(la_module)

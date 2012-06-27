@@ -60,6 +60,7 @@ clean:
 	-find $(cfg_trydir) -type f -name \*.la -exec $(RM) \{\} \;
 	-$(RM) -r $$(find $(cfg_trydir) -type d -name .libs)
 	-$(RM) -r $$(find $(cfg_srcdir) -type d -name .libs)
+	-$(RM) -r $$(find $(cfg_trydir)/tmp -type d -name "d2*")
 	-$(RM) $(cfg_trydir)/caslib/try_caslib_dbg
 
 .setup_env:
