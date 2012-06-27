@@ -70,8 +70,7 @@ def mod_auth
     "LoadModule authn_file_module #{xdir}/mod_authn_file.so",
     "LoadModule authz_user_module #{xdir}/mod_authz_user.so",
     "LoadModule authz_default_module #{xdir}/mod_authz_default.so",
-    "LoadModule authz_host_module #{xdir}/mod_authz_host.so",
-    "LoadModule log_config_module #{xdir}/mod_log_config.so"
+    "LoadModule authz_host_module #{xdir}/mod_authz_host.so"
   ]
 end
 
