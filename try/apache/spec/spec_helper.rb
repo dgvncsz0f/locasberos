@@ -36,11 +36,20 @@ require "rubygems"
 require "bundler/setup"
 require "httparty"
 
+def find_x(*candidates)
+  candidates.select {|f| FileTest.executable?(f)}.first
+end
+
 $root        = File.expand_path(File.dirname(__FILE__) + "/../../../dist")
-$libexecdir  = ENV["apxs_libexecdir"]
+$bin_apxs    = find_x("/usr/bin/apxs", "/usr/bin/apxs2")
+$bin_httpd   = find_x("/usr/sbin/httpd", "/usr/bin/httpd", "/usr/sbin/apache2", "/usr/bin/apache2")
 $listen_host = "127.0.0.1"
 $listen_port = 9999
 $endpoint    = "http://" + $listen_host + ":" + $listen_port.to_s
+
+def libexecdir
+  IO.popen("#{$bin_apxs} -q LIBEXECDIR") {|f| f.read.strip}
+end
 
 def url4(path, vhost=nil)
   name = (vhost.nil? ? $listen_host : vhost)
@@ -56,23 +65,25 @@ def vhost_end
 end
 
 def mod_auth
-  [ "LoadModule auth_basic_module "+ $libexecdir +"/mod_auth_basic.so",
-    "LoadModule authn_file_module "+ $libexecdir +"/mod_authn_file.so",
-    "LoadModule authz_user_module "+ $libexecdir +"/mod_authz_user.so",
-    "LoadModule authz_default_module "+ $libexecdir +"/mod_authz_default.so",
-    "LoadModule authz_host_module "+ $libexecdir +"/mod_authz_host.so"
+  xdir = libexecdir
+  [ "LoadModule auth_basic_module #{xdir}/mod_auth_basic.so",
+    "LoadModule authn_file_module #{xdir}/mod_authn_file.so",
+    "LoadModule authz_user_module #{xdir}/mod_authz_user.so",
+    "LoadModule authz_default_module #{xdir}/mod_authz_default.so",
+    "LoadModule authz_host_module #{xdir}/mod_authz_host.so"
   ]
 end
 
 def mod_locasberos
-  "LoadModule locasberos_module " + $root + $libexecdir + "/mod_locasberos.so"
+  xdir = libexecdir
+  "LoadModule locasberos_module #{$root}/#{xdir}/mod_locasberos.so"
 end
 
 def clean(server_root)
   FileUtils.rm_rf(server_root)
 end
 
-def configure(config=[], apachebin="/usr/sbin/apache2")
+def configure(config=[])
   fixtures_root = File.expand_path(File.dirname(__FILE__) + "/../../fixtures")
   tmp_root      = File.expand_path(File.dirname(__FILE__) + "/../../tmp")
   server_root   = Dir.mktmpdir(nil, tmp_root)
@@ -101,8 +112,8 @@ def configure(config=[], apachebin="/usr/sbin/apache2")
   return(server_root)
 end
 
-def apache_start(server_root, apachebin="/usr/bin/apache2")
-  cmd = apachebin +
+def apache_start(server_root)
+  cmd = $bin_httpd +
         " -k start" +
         " -f "+ server_root +"/apache.cfg" +
         " -d "+ server_root
@@ -118,8 +129,8 @@ def apache_start(server_root, apachebin="/usr/bin/apache2")
   raise(RuntimeError.new("cant load apache ["+cmd+"]"))
 end
 
-def apache_stop(server_root, apachebin="/usr/bin/apache2")
-  cmd = apachebin +
+def apache_stop(server_root)
+  cmd = $bin_httpd +
         " -k stop" +
         " -f "+ server_root +"/apache.cfg" +
         " -d "+ server_root +
@@ -135,14 +146,14 @@ def apache_stop(server_root, apachebin="/usr/bin/apache2")
   end
 end
 
-def with_apache(config=[], apachebin="/usr/sbin/apache2", &proc)
-  server_root = configure(config, apachebin)
+def with_apache(config=[], &proc)
+  server_root = configure(config)
   begin
-    apache_start(server_root, apachebin)
+    apache_start(server_root)
     begin
       proc.call()
     ensure
-      apache_stop(server_root, apachebin)
+      apache_stop(server_root)
     end
   ensure
     clean(server_root)
