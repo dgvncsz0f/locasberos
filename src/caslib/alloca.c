@@ -42,6 +42,11 @@ void alloca_stdlib_free(const alloca_t *_, void *ptr) {
   free(ptr);
 }
 
+void *alloca_stdlib_realloc(const alloca_t *_, void *ptr, size_t size) {
+  // FIXME: Not yet implemented
+  CASLIB_UNUSED(ptr); CASLIB_UNUSED(_); CASLIB_UNUSED(size);
+}
+
 void alloca_stdlib(alloca_t *ptr) {
   ptr->alloc_f   = alloca_stdlib_malloc;
   ptr->destroy_f = alloca_stdlib_free;
