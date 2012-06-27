@@ -3,6 +3,7 @@
 *.la
 *.slo
 .libs/
+.bundle/
 doc/build/
 dist/
 try/caslib/try_caslib_dbg
