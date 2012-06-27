@@ -61,7 +61,7 @@ void trace_destroy(void *_, void *p) {
 
 TEST(caslib_init_with_should_cope_with_malloc_failure) {
   alloca_t alloca;
-  alloca.alloca_f  = bogus_alloc;
+  alloca.alloc_f   = bogus_alloc;
   alloca.destroy_f = alloca_stdlib_free;
   alloca.data      = NULL;
   CHECK(NULL == caslib_init_with("", &alloca));
@@ -71,7 +71,7 @@ TEST(caslib_init_with_should_invoke_destroy_for_each_alloca) {
   trace_alloc_calls   = 0;
   trace_destroy_calls = 0;
   alloca_t alloca;
-  alloca.alloca_f  = trace_alloc;
+  alloca.alloc_f   = trace_alloc;
   alloca.destroy_f = trace_destroy;
   alloca.data      = NULL;
   caslib_destroy(caslib_init_with("", &alloca));

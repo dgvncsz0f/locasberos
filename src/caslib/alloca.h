@@ -54,22 +54,22 @@ typedef struct alloca_t {
   void *(*alloc_f)(const struct alloca_t *, size_t size);
 
   /*! Frees memory used by a given pointer, which was allocated by
-   *  alloca_f. It is considered an error to invoke this function
+   *  alloc_f. It is considered an error to invoke this function
    *  twice or more.
    *
-   * \param ptr Pointer to a memory allocated by alloca_f (might be NULL);
+   * \param ptr Pointer to a memory allocated by alloc_f (might be NULL);
    */
   void (*destroy_f)(const struct alloca_t *, void *ptr);
 
   /*! Changes the size of the memory block pointed to by ptr to size
    *  bytes.
    *
-   * \param ptr Pointer to a memory allocated by alloca_f (might be NULL);
+   * \param ptr Pointer to a memory allocated by alloc_f (might be NULL);
    * \param size The new size.
    */
   void *(*realloc_f)(const struct alloca_t *, void *ptr, size_t size);
 
-  /*! Data-pointer that may be retrieved inside alloca_f or destroy_f functions.
+  /*! Data-pointer that may be retrieved inside alloc_f or destroy_f functions.
    */
   void *data;
 
