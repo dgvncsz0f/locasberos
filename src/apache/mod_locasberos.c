@@ -72,16 +72,16 @@ void locasberos_init_cfg(mod_locasberos_t *cfg) {
 }
 
 static
-void locasberos_alloca_free(void *_, void *ptr) {
-  // Apache autoclean requests pool after each request
-  CASLIB_UNUSED(_);
-  CASLIB_UNUSED(ptr);
+void *__apr_palloc_wrapper(const alloca_t *a, size_t size) {
+  return(apr_palloc((apr_pool_t *) a->data, size));
 }
 
 static
-void locasberos_alloca(alloca_t *ptr) {
-  ptr->alloca_f = apr_palloc;
-  ptr->destroy_f = locasberos_alloca_free;
+void locasberos_alloca(apr_pool_t *pool, alloca_t *ptr) {
+  ptr->alloc_f   = __apr_palloc_wrapper;
+  ptr->destroy_f = ALLOCA_DUMMY_FREE;
+  ptr->realloc_f = ALLOCA_DUMMY_REALLOC;
+  ptr->data      = pool;
 }
 
 static
@@ -122,7 +122,7 @@ void *locasberos_cfg_merge(apr_pool_t *pool, void *vbase, void *vadd) {
 static
 int locasberos_authenticate(request_rec *r) {
   alloca_t alloca;
-  locasberos_alloca(&alloca);
+  locasberos_alloca(NULL, &alloca);
   return(HTTP_FORBIDDEN);
 }
 

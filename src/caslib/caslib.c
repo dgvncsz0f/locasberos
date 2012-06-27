@@ -81,7 +81,7 @@ int __joinparams(const caslib_t *cas, char *dest, size_t sz, int argv, ...) {
 
   va_start(args, argv);
   if (dest != NULL) {
-    fmtstr = CASLIB_ALLOCA_F(cas->alloca, 3*argv);
+    fmtstr = CASLIB_ALLOC_F(cas->alloca, 3*argv);
     for (k=0; k<argv; k+=1) {
       if (k == 0)
         strncpy(fmtstr, "%s", 2);
@@ -129,7 +129,7 @@ char *__uencode_r(const caslib_t *cas, CURL *curl, const char *key, const char *
   size_t sz   = __uencode(curl, NULL, 0, key, val);
   char *param = NULL;
 
-  param = CASLIB_ALLOCA_F(cas->alloca, sz);
+  param = CASLIB_ALLOC_F(cas->alloca, sz);
   rc    = __uencode(curl, param, sz, key, val);
   if (rc == -1) {
     CASLIB_DESTROY_F(cas->alloca, param);
@@ -156,20 +156,21 @@ caslib_t *caslib_init(const char *endpoint) {
 }
 
 caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
-  caslib_t *p = CASLIB_ALLOCA_F_PTR(ptr, sizeof(caslib_t));
+  caslib_t *p = CASLIB_ALLOC_F_PTR(ptr, sizeof(caslib_t));
   CASLIB_GOTOIF(p==NULL, failure);
   p->endpoint             = NULL;
   p->service_validate_url = NULL;
   p->timeout              = 60;
-  p->alloca.alloca_f      = ptr->alloca_f;
+  p->alloca.alloc_f       = ptr->alloc_f;
   p->alloca.destroy_f     = ptr->destroy_f;
+  p->alloca.realloc_f     = ptr->realloc_f;
   p->alloca.data          = ptr->data;
 
-  p->endpoint = CASLIB_ALLOCA_F_PTR(ptr, strlen(endpoint) + 1);
+  p->endpoint = CASLIB_ALLOC_F_PTR(ptr, strlen(endpoint) + 1);
   CASLIB_GOTOIF(p->endpoint==NULL, failure);
   strcpy(p->endpoint, endpoint);
 
-  p->service_validate_url = CASLIB_ALLOCA_F_PTR(ptr, strlen("/serviceValidate") + 1);
+  p->service_validate_url = CASLIB_ALLOC_F_PTR(ptr, strlen("/serviceValidate") + 1);
   CASLIB_GOTOIF(p->service_validate_url==NULL, failure);
   strcpy(p->service_validate_url, "/serviceValidate");
 
@@ -199,7 +200,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   CASLIB_GOTOIF(curl==NULL, failure);
 
   sz  = strlen(cas->endpoint) + strlen(cas->service_validate_url);
-  url = CASLIB_ALLOCA_F(cas->alloca, sz+1);
+  url = CASLIB_ALLOC_F(cas->alloca, sz+1);
   CASLIB_GOTOIF(url==NULL, failure);
   rc  = snprintf(url, sz+1, "%s%s", cas->endpoint, cas->service_validate_url);
   CASLIB_GOTOIF(rc<0, failure);
@@ -209,7 +210,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   erenew   = __uencode_r(cas, curl, "renew", (renew ? "true" : "false"));
   rc       = __joinparams(cas, NULL, 0, 3, eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
-  reqbdy   = CASLIB_ALLOCA_F(cas->alloca, rc);
+  reqbdy   = CASLIB_ALLOC_F(cas->alloca, rc);
   CASLIB_GOTOIF(reqbdy==NULL, failure);
   rc       = __joinparams(cas, reqbdy, rc, 3, eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
@@ -230,7 +231,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   xmlParseChunk(ctxt, NULL, 0, 1);
   CASLIB_GOTOIF(! ctxt->wellFormed, failure);
 
-  rsp = CASLIB_ALLOCA_F(cas->alloca, sizeof(caslib_rsp_t));
+  rsp = CASLIB_ALLOC_F(cas->alloca, sizeof(caslib_rsp_t));
   CASLIB_GOTOIF(rsp==NULL, failure);
   rsp->xml    = ctxt->myDoc;
   rsp->status = 0;

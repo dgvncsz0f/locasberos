@@ -31,11 +31,17 @@
 #ifndef __LOCASBEROS_ALLOCA__
 #define __LOCASBEROS_ALLOCA__
 
-#define CASLIB_ALLOCA_F(a, s) a.alloca_f(a.data, s)
-#define CASLIB_ALLOCA_F_PTR(a, s) a->alloca_f(a->data, s)
+#define CASLIB_ALLOC_F(a, s) (a.alloc_f == NULL ? NULL : a.alloc_f(&a, s))
+#define CASLIB_ALLOC_F_PTR(a, s) (a->alloc_f == NULL ? NULL : a->alloc_f(a, s))
 
-#define CASLIB_DESTROY_F(a, p) a.destroy_f(a.data, p)
-#define CASLIB_DESTROY_F_PTR(a, p) a->destroy_f(a->data, p)
+#define CASLIB_REALLOC_F(a, p, s) (a.realloc_f == NULL ? NULL : a.realloc_f(&a, p, s))
+#define CASLIB_REALLOC_F_PTR(a, p, s) (a->realloc_f == NULL ? NULL : a.realloc_f(a, p, s))
+
+#define CASLIB_DESTROY_F(a, p) if (a.destroy_f != NULL) { a.destroy_f(&a, p); }
+#define CASLIB_DESTROY_F_PTR(a, p) if (a->destroy_f != NULL) { a->destroy_f(a, p); }
+
+#define ALLOCA_DUMMY_FREE NULL
+#define ALLOCA_DUMMY_REALLOC NULL
 
 typedef struct alloca_t {
   /*! This function should allocate size bytes and return a pointer to
@@ -45,7 +51,7 @@ typedef struct alloca_t {
    * \return The pointer to the allocated memory. It may also be NULL,
    *         which represents an error;
    */
-  void *(*alloca_f)(void *, size_t size);
+  void *(*alloc_f)(const struct alloca_t *, size_t size);
 
   /*! Frees memory used by a given pointer, which was allocated by
    *  alloca_f. It is considered an error to invoke this function
@@ -53,7 +59,15 @@ typedef struct alloca_t {
    *
    * \param ptr Pointer to a memory allocated by alloca_f (might be NULL);
    */
-  void (*destroy_f)(void *, void *ptr);
+  void (*destroy_f)(const struct alloca_t *, void *ptr);
+
+  /*! Changes the size of the memory block pointed to by ptr to size
+   *  bytes.
+   *
+   * \param ptr Pointer to a memory allocated by alloca_f (might be NULL);
+   * \param size The new size.
+   */
+  void *(*realloc_f)(const struct alloca_t *, void *ptr, size_t size);
 
   /*! Data-pointer that may be retrieved inside alloca_f or destroy_f functions.
    */
@@ -62,7 +76,8 @@ typedef struct alloca_t {
 } alloca_t;
 
 void alloca_stdlib(alloca_t *ptr);
-void *alloca_stdlib_malloc(void *, size_t);
-void alloca_stdlib_free(void *, void *);
+void *alloca_stdlib_malloc(const alloca_t *, size_t);
+void *alloca_stdlib_realloc(const alloca_t *, void *ptr, size_t);
+void alloca_stdlib_free(const alloca_t *, void *);
 
 #endif
