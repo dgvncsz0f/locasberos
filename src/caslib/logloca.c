@@ -47,7 +47,7 @@ void *logloca_ap_error(const char *msg, ...) {
     return ap_log_error(APLOG_MARK, APLOG_ERR, 0, *msg);
 }
 
-void logloca_apache(alloca_t *ptr) {
+void logloca_apache(logloca_t *ptr) {
   ptr->debug_f = logloca_ap_debug;
   ptr->info_f  = logloca_ap_info;
   ptr->warn_f  = logloca_ap_warn;

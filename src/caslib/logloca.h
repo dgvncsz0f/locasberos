@@ -32,13 +32,13 @@
 #define __LOCASBEROS_LOGLOCA__
 
 
-typedef struct alloca_t {
+typedef struct logloca_t {
     void (*debug_f)(const char *fmt, ...);
     void (*info_f)(const char *fmt, ...);
     void (*warn_f)(const char *fmt, ...);
     void (*error_f)(const char *fmt, ...);
 }
 
-void logloca_apache(alloca_t *ptr);
+void logloca_apache(logloca_t *ptr);
 
 #endif
