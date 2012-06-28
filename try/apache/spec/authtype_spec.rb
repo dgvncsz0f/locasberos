@@ -36,13 +36,15 @@ describe :authtype do
 
   it "must not interfere with other authentication methods" do
     with_apache([ mod_locasberos,
-                  "<Location />",
-                  " CASEnabled On",
-                  " AuthType Basic",
-                  " AuthName \"rspec\"",
-                  " AuthUserFile passwd.db",
-                  " Require valid-user",
-                  "</Location>"
+                  '<Location />',
+                  ' CASEnabled On',
+                  ' AuthType Basic',
+                  ' CasEndpoint "http://localhost"',
+                  ' CasService "localhost"',
+                  ' AuthName "rspec"',
+                  ' AuthUserFile passwd.db',
+                  ' Require valid-user',
+                  '</Location>'
                 ]) do
       response = AuthBasicHTTP.get(url4("/index.txt"))
       response.code.should == 200

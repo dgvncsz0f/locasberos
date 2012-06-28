@@ -38,12 +38,14 @@ describe :vhost do
   it "should reply 403 for unauthenticated requests" do
     with_apache([ mod_locasberos,
                   vhost_begin,
-                  " ServerName localhost",
-                  " CASEnabled On",
-                  " <Location /index.txt>",
-                  "  AuthType locasberos",
-                  "  Require valid-user",
-                  " </Location>",
+                  ' ServerName localhost',
+                  ' <Location /index.txt>',
+                  '  CASEnabled On',
+                  '  CasEndpoint "http://localhost"',
+                  '  CasService "localhost"',
+                  '  AuthType locasberos',
+                  '  Require valid-user',
+                  ' </Location>',
                   vhost_end
                 ]) do
       response = HTTParty.get(url4("/index.txt", "localhost"))

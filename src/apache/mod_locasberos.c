@@ -142,6 +142,8 @@ apr_hash_t *parse_query_string(apr_pool_t *pool, char *args) {
 
 static
 int locasberos_authenticate(request_rec *r) {
+  CASLIB_GOTOIF(r->ap_auth_type==NULL, failure);
+
   if (apr_strnatcasecmp(r->ap_auth_type, "locasberos"))
     return(DECLINED);
 
@@ -160,6 +162,9 @@ int locasberos_authenticate(request_rec *r) {
   caslib_destroy(cas);
 
   return(status);
+
+ failure:
+  return(DECLINED);
 }
 
 static
