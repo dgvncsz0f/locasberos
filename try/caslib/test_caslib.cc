@@ -40,30 +40,21 @@ size_t trace_alloc_calls;
 size_t trace_destroy_calls;
 
 static
-void *bogus_alloc(void *_, size_t) {
-  CASLIB_UNUSED(_);
-  return(NULL);
-}
-
-static
-void *trace_alloc(void *_, size_t s) {
-  CASLIB_UNUSED(_);
+void *trace_alloc(size_t s) {
   trace_alloc_calls += 1;
   return(malloc(s));
 }
 
 static
-void trace_destroy(void *_, void *p) {
-  CASLIB_UNUSED(_);
+void trace_destroy(void *p) {
   trace_destroy_calls += 1;
   free(p);
 }
 
 TEST(caslib_init_with_should_cope_with_malloc_failure) {
   alloca_t alloca;
-  alloca.alloc_f   = bogus_alloc;
-  alloca.destroy_f = alloca_stdlib_free;
-  alloca.data      = NULL;
+  alloca.alloc_f   = CASLIB_DUMMY_ALLOC;
+  alloca.destroy_f = free;
   CHECK(NULL == caslib_init_with("", &alloca));
 }
 
@@ -73,7 +64,6 @@ TEST(caslib_init_with_should_invoke_destroy_for_each_alloca) {
   alloca_t alloca;
   alloca.alloc_f   = trace_alloc;
   alloca.destroy_f = trace_destroy;
-  alloca.data      = NULL;
   caslib_destroy(caslib_init_with("", &alloca));
   CHECK(trace_alloc_calls > 0);
   CHECK_EQUAL(trace_alloc_calls, trace_destroy_calls);

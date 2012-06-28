@@ -40,9 +40,9 @@
 #define CASLIB_DESTROY_F(a, p) if (a.destroy_f != NULL) { a.destroy_f(p); }
 #define CASLIB_DESTROY_F_PTR(a, p) if (a->destroy_f != NULL) { a->destroy_f(p); }
 
-#define ALLOCA_DUMMY_ALLOC NULL
-#define ALLOCA_DUMMY_FREE NULL
-#define ALLOCA_DUMMY_REALLOC NULL
+#define CASLIB_DUMMY_ALLOC NULL
+#define CASLIB_DUMMY_FREE NULL
+#define CASLIB_DUMMY_REALLOC NULL
 
 typedef struct alloca_t {
   /*! This function should allocate size bytes and return a pointer to
