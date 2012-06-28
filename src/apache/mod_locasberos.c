@@ -30,24 +30,26 @@
 
 #include "httpd.h"
 #include "http_config.h"
-#include "apr_buckets.h"
-#include "apr_general.h"
-#include "apr_lib.h"
-#include "util_filter.h"
 #include "http_request.h"
+#include "apr_general.h"
+#include "apr_strings.h"
+#include "apr_tables.h"
+#include "apr_hash.h"
+#include "apr_lib.h"
 
 #include "mod_locasberos.h"
 #include "logloca.h"
 
 #include "caslib/misc.h"
-#include "caslib/alloca.h"
 #include "caslib/caslib.h"
 
 #include <ctype.h>
 #include <stdbool.h>
 
-#define SELECT_IF_PTRDEF(a, b, m) (a->m==NULL ? b->m : a->m)
-#define SELECT_IF_INTDEF(a, b, m) (a->m==-1 ? b->m : a ->m)
+#define ML_SELECT_IF_PTRDEF(a, b, m) (a->m==NULL ? b->m : a->m)
+#define ML_SELECT_IF_INTDEF(a, b, m) (a->m==-1 ? b->m : a ->m)
+
+#define ML_GET_PTRVAL(v, d) (v==NULL ? d : v)
 
 typedef struct {
   int enabled;
@@ -79,19 +81,6 @@ void locasberos_init_cfg(mod_locasberos_t *cfg) {
 }
 
 static
-void *__apr_palloc_wrapper(const alloca_t *a, size_t size) {
-  return(apr_palloc((apr_pool_t *) a->data, size));
-}
-
-static
-void locasberos_alloca(apr_pool_t *pool, alloca_t *ptr) {
-  ptr->alloc_f   = __apr_palloc_wrapper;
-  ptr->destroy_f = ALLOCA_DUMMY_FREE;
-  ptr->realloc_f = ALLOCA_DUMMY_REALLOC;
-  ptr->data      = pool;
-}
-
-static
 void *locasberos_cfg_new_srv(apr_pool_t *pool, server_rec *s) {
   mod_locasberos_t *cfg = apr_palloc(pool, sizeof(mod_locasberos_t));
   if (cfg != NULL)
@@ -113,25 +102,69 @@ void *locasberos_cfg_merge(apr_pool_t *pool, void *vbase, void *vadd) {
   mod_locasberos_t *add  = (mod_locasberos_t *) vadd;
   mod_locasberos_t *cfg  = (mod_locasberos_t *) apr_palloc(pool, sizeof(mod_locasberos_t));
 
-  cfg->enabled             = SELECT_IF_INTDEF(add, base, enabled);
-  cfg->cas_endpoint        = SELECT_IF_PTRDEF(add, base, cas_endpoint);
-  cfg->cas_login_url       = SELECT_IF_PTRDEF(add, base, cas_login_url);
-  cfg->cas_srvvalidate_url = SELECT_IF_PTRDEF(add, base, cas_srvvalidate_url);
-  cfg->cookie_name         = SELECT_IF_PTRDEF(add, base, cookie_name);
-  cfg->cookie_path         = SELECT_IF_PTRDEF(add, base, cookie_path);
-  cfg->cookie_timeout      = SELECT_IF_INTDEF(add, base, cookie_timeout);
-  cfg->cas_service         = SELECT_IF_PTRDEF(add, base, cas_service);
-  cfg->cas_renew           = SELECT_IF_INTDEF(add, base, cas_renew);
+  cfg->enabled             = ML_SELECT_IF_INTDEF(add, base, enabled);
+  cfg->cas_endpoint        = ML_SELECT_IF_PTRDEF(add, base, cas_endpoint);
+  cfg->cas_login_url       = ML_SELECT_IF_PTRDEF(add, base, cas_login_url);
+  cfg->cas_srvvalidate_url = ML_SELECT_IF_PTRDEF(add, base, cas_srvvalidate_url);
+  cfg->cookie_name         = ML_SELECT_IF_PTRDEF(add, base, cookie_name);
+  cfg->cookie_path         = ML_SELECT_IF_PTRDEF(add, base, cookie_path);
+  cfg->cookie_timeout      = ML_SELECT_IF_INTDEF(add, base, cookie_timeout);
+  cfg->cas_service         = ML_SELECT_IF_PTRDEF(add, base, cas_service);
+  cfg->cas_renew           = ML_SELECT_IF_INTDEF(add, base, cas_renew);
 
   return(cfg);
 }
 
 static
+apr_hash_t *parse_query_string(apr_pool_t *pool, char *args) {
+    apr_hash_t *query          = apr_hash_make(pool);
+    CASLIB_GOTOIF(args==NULL, terminate);
+    apr_array_header_t *values = NULL;
+    char *val                  = NULL;
+    char *ctx                  = NULL;
+    char *token                = apr_strtok(args, "&", &ctx);
+
+    while (token != NULL) {
+      token = apr_strtok(NULL, "&", &ctx);
+      val   = strchr(token, '=');
+      if (val != NULL) {
+        *val  = '\0';
+        val  += 1;
+        ap_unescape_url(token);
+        ap_unescape_url(val);
+      } else {
+        val = "";
+        ap_unescape_url(token);
+      }
+
+      // TODO: support multiple values?
+      apr_hash_set(query, token, APR_HASH_KEY_STRING, apr_pstrdup(pool, val));
+    }
+
+ terminate:
+    return(query);
+}
+
+static
 int locasberos_authenticate(request_rec *r) {
-  alloca_t alloca;
-  locasberos_alloca(NULL, &alloca);
-  caslib_t *caslib = ap_get_module_config(r->server->module_config, &locasberos_module);
-  return(HTTP_FORBIDDEN);
+  if (apr_strnatcasecmp(r->ap_auth_type, "locasberos"))
+    return(DECLINED);
+
+  mod_locasberos_t *cfg = (mod_locasberos_t *) r->per_dir_config;
+  apr_hash_t *args      = parse_query_string(r->pool, r->args);
+  char *ticket          = apr_hash_get(args, "ticket", APR_HASH_KEY_STRING);
+  caslib_t *cas         = NULL;
+  caslib_rsp_t *rsp     = NULL;
+  int status            = DECLINED;
+
+  cas = caslib_init(cfg->cas_endpoint);
+  rsp = caslib_service_validate(cas, cfg->cas_service, ticket, false);
+  if (rsp==NULL || !caslib_rsp_authentication_success(rsp))
+    status = HTTP_FORBIDDEN;
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+
+  return(status);
 }
 
 static
@@ -140,47 +173,47 @@ const command_rec locasberos_cmds[] = {
   AP_INIT_FLAG("CasEnabled",
                ap_set_flag_slot,
                (void *) APR_OFFSETOF(mod_locasberos_t, enabled),
-               OR_ALL,
+               OR_AUTHCFG,
                "Enable/Disable the module"),
   AP_INIT_TAKE1("CasEndpoint",
-                ap_set_string_slot_lower,
+                ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_endpoint),
-                OR_ALL,
+                OR_AUTHCFG,
                 "Define the CAS endpoint to use"),
   AP_INIT_TAKE1("CasLoginUrl",
-                ap_set_string_slot_lower,
+                ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_login_url),
-                OR_ALL,
+                OR_AUTHCFG,
                 "The CAS service validate URL to use"),
   AP_INIT_TAKE1("CasServiceValidateUrl",
-                ap_set_string_slot_lower,
+                ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_srvvalidate_url),
-                OR_ALL,
+                OR_AUTHCFG,
                 "The CAS service validate URL to use"),
   AP_INIT_TAKE1("CasCookieName",
-                ap_set_string_slot_lower,
+                ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cookie_name),
-                OR_ALL,
+                OR_AUTHCFG,
                 "Define the cookie name to use"),
   AP_INIT_TAKE1("CasCookieTimeout",
                 ap_set_int_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cookie_timeout),
-                OR_ALL,
+                OR_AUTHCFG,
                 "Define the cookie expiration (in seconds)"),
   AP_INIT_TAKE1("CasCookiePath",
-                ap_set_string_slot_lower,
+                ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cookie_path),
-                OR_ALL,
+                OR_AUTHCFG,
                 "Define the cookie path to use when issuing/validating the cookie"),
   AP_INIT_TAKE1("CasService",
-                ap_set_string_slot_lower,
+                ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_service),
-                OR_ALL,
+                OR_AUTHCFG,
                 "Define the CAS service to use when validating the service ticket"),
   AP_INIT_FLAG("CasRenew",
                 ap_set_flag_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_renew),
-                OR_ALL,
+                OR_AUTHCFG,
                 "Define whether or not setting the renew flag when validating the service ticket"),
   { NULL }
 };
@@ -202,8 +235,8 @@ module AP_DECLARE_DATA locasberos_module = {
   STANDARD20_MODULE_STUFF,
   locasberos_cfg_new_dir,
   locasberos_cfg_merge,
-  locasberos_cfg_new_srv,
-  locasberos_cfg_merge,
+  NULL,
+  NULL,
   locasberos_cmds,
   locasberos_hooks
 };
