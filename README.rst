@@ -4,21 +4,21 @@ LOCASBEROS
 
 An umbrella for three projects:
 
-* caslib: A CAS client library, written in ANSI C [#]_;
+* caslib: A CAS client library, written in ANSI C [1]_;
 
 * apache-mod-locasberos: An apache module that takes care of CAS
   authentication using caslib;
 
 * nginx-mod-locasberos: The same as above, but for nginx;
 
-.. [#] C99, as of May 2000 is the new standard;
+.. [1] C99, as of May 2000 is the new standard;
 
 API Stability
 =============
 
-* unstable [#]_
+* unstable [2]_
 
-.. [#] Possible values:
+.. [2] Possible values:
 
        * stable: production ready;
        * testing: somehow ready, but not yet ready for production;
