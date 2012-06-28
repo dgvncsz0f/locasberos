@@ -159,7 +159,7 @@ int locasberos_authenticate(request_rec *r) {
 
   cas = caslib_init(cfg->cas_endpoint);
   rsp = caslib_service_validate(cas, cfg->cas_service, ticket, false);
-  if (rsp==NULL || !caslib_rsp_authentication_success(rsp))
+  if (rsp==NULL || !caslib_rsp_auth_success(rsp))
     status = HTTP_FORBIDDEN;
   caslib_rsp_destroy(cas, rsp);
   caslib_destroy(cas);
