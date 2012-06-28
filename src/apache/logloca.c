@@ -35,21 +35,26 @@
 #include "http_protocol.h"
 #include "http_request.h"
 #include "http_log.h"
+#include "caslib/misc.h"
 #include "caslib/log.h"
 
-void (*logger_ap_debug)(const char *msg, ...) {
+void (*logger_ap_debug)(void *_, const char *msg, ...) {
+    CASLIB_UNUSED(_);
     return ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, msg);
 }
 
-void (*logger_ap_info)(const char *msg, ...) {
+void (*logger_ap_info)(void *_, const char *msg, ...) {
+    CASLIB_UNUSED(_);
     return ap_log_error(APLOG_MARK, APLOG_INFO, 0, msg);
 }
 
-void (*logger_ap_warn)(const char *msg, ...) {
+void (*logger_ap_warn)(void *_, const char *msg, ...) {
+    CASLIB_UNUSED(_);
     return ap_log_error(APLOG_MARK, APLOG_WARNING, 0, msg);
 }
 
-void (*logger_ap_error)(const char *msg, ...) {
+void (*logger_ap_error)(void *_, const char *msg, ...) {
+    CASLIB_UNUSED(_);
     return ap_log_error(APLOG_MARK, APLOG_ERR, 0, msg);
 }
 

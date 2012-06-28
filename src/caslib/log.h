@@ -32,10 +32,10 @@
 #define __LOCASBEROS_LOG__
 
 typedef struct logger_t {
-    void (*debug_f)(const char *fmt, ...);
-    void (*info_f)(const char *fmt, ...);
-    void (*warn_f)(const char *fmt, ...);
-    void (*error_f)(const char *fmt, ...);
+    void (*debug_f)(void *ctx, const char *fmt, ...);
+    void (*info_f)(void *ctx, const char *fmt, ...);
+    void (*warn_f)(void *ctx, const char *fmt, ...);
+    void (*error_f)(void *ctx, const char *fmt, ...);
 } logger_t;
 
 #endif
