@@ -31,13 +31,7 @@
 #ifndef __LOCASBEROS_LOGLOCA__
 #define __LOCASBEROS_LOGLOCA__
 
-
-typedef struct logloca_t {
-    void (*debug_f)(const char *fmt, ...);
-    void (*info_f)(const char *fmt, ...);
-    void (*warn_f)(const char *fmt, ...);
-    void (*error_f)(const char *fmt, ...);
-}
+#include "caslib/misc.h"
 
 void logloca_apache(logloca_t *ptr);
 

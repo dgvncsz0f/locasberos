@@ -29,22 +29,28 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
+#include "httpd.h"
+#include "http_config.h"
+#include "http_core.h"
+#include "http_protocol.h"
+#include "http_request.h"
 #include "http_log.h"
+#include "caslib/misc.h"
 
 void *logloca_ap_debug(const char *msg, ...) {
-    return ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, *msg);
+    return ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, msg);
 }
 
 void *logloca_ap_info(const char *msg, ...) {
-    return ap_log_error(APLOG_MARK, APLOG_INFO, 0, *msg);
+    return ap_log_error(APLOG_MARK, APLOG_INFO, 0, msg);
 }
 
 void *logloca_ap_warn(const char *msg, ...) {
-    return ap_log_error(APLOG_MARK, APLOG_WARNING, 0, *msg);
+    return ap_log_error(APLOG_MARK, APLOG_WARNING, 0, msg);
 }
 
 void *logloca_ap_error(const char *msg, ...) {
-    return ap_log_error(APLOG_MARK, APLOG_ERR, 0, *msg);
+    return ap_log_error(APLOG_MARK, APLOG_ERR, 0, msg);
 }
 
 void logloca_apache(logloca_t *ptr) {
