@@ -164,7 +164,6 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
   p->alloca.alloc_f       = ptr->alloc_f;
   p->alloca.destroy_f     = ptr->destroy_f;
   p->alloca.realloc_f     = ptr->realloc_f;
-  p->alloca.data          = ptr->data;
 
   p->endpoint = CASLIB_ALLOC_F_PTR(ptr, strlen(endpoint) + 1);
   CASLIB_GOTOIF(p->endpoint==NULL, failure);

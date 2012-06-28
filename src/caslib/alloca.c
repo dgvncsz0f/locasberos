@@ -32,24 +32,8 @@
 #include "misc.h"
 #include "alloca.h"
 
-void *alloca_stdlib_malloc(const alloca_t *_, size_t size) {
-  CASLIB_UNUSED(_);
-  return(malloc(size));
-}
-
-void alloca_stdlib_free(const alloca_t *_, void *ptr) {
-  CASLIB_UNUSED(_);
-  free(ptr);
-}
-
-void *alloca_stdlib_realloc(const alloca_t *_, void *ptr, size_t size) {
-  // FIXME: Not yet implemented
-  CASLIB_UNUSED(ptr); CASLIB_UNUSED(_); CASLIB_UNUSED(size);
-}
-
 void alloca_stdlib(alloca_t *ptr) {
-  ptr->alloc_f   = alloca_stdlib_malloc;
-  ptr->destroy_f = alloca_stdlib_free;
-  ptr->realloc_f = alloca_stdlib_realloc;
-  ptr->data      = NULL;
+  ptr->alloc_f   = malloc;
+  ptr->destroy_f = free;
+  ptr->realloc_f = realloc;
 }

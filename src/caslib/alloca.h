@@ -31,15 +31,16 @@
 #ifndef __LOCASBEROS_ALLOCA__
 #define __LOCASBEROS_ALLOCA__
 
-#define CASLIB_ALLOC_F(a, s) (a.alloc_f == NULL ? NULL : a.alloc_f(&a, s))
-#define CASLIB_ALLOC_F_PTR(a, s) (a->alloc_f == NULL ? NULL : a->alloc_f(a, s))
+#define CASLIB_ALLOC_F(a, s) (a.alloc_f == NULL ? NULL : a.alloc_f(s))
+#define CASLIB_ALLOC_F_PTR(a, s) (a->alloc_f == NULL ? NULL : a->alloc_f(s))
 
-#define CASLIB_REALLOC_F(a, p, s) (a.realloc_f == NULL ? NULL : a.realloc_f(&a, p, s))
-#define CASLIB_REALLOC_F_PTR(a, p, s) (a->realloc_f == NULL ? NULL : a.realloc_f(a, p, s))
+#define CASLIB_REALLOC_F(a, p, s) (a.realloc_f == NULL ? NULL : a.realloc_f(p, s))
+#define CASLIB_REALLOC_F_PTR(a, p, s) (a->realloc_f == NULL ? NULL : a.realloc_f(p, s))
 
-#define CASLIB_DESTROY_F(a, p) if (a.destroy_f != NULL) { a.destroy_f(&a, p); }
-#define CASLIB_DESTROY_F_PTR(a, p) if (a->destroy_f != NULL) { a->destroy_f(a, p); }
+#define CASLIB_DESTROY_F(a, p) if (a.destroy_f != NULL) { a.destroy_f(p); }
+#define CASLIB_DESTROY_F_PTR(a, p) if (a->destroy_f != NULL) { a->destroy_f(p); }
 
+#define ALLOCA_DUMMY_ALLOC NULL
 #define ALLOCA_DUMMY_FREE NULL
 #define ALLOCA_DUMMY_REALLOC NULL
 
@@ -51,7 +52,7 @@ typedef struct alloca_t {
    * \return The pointer to the allocated memory. It may also be NULL,
    *         which represents an error;
    */
-  void *(*alloc_f)(const struct alloca_t *, size_t size);
+  void *(*alloc_f)(size_t size);
 
   /*! Frees memory used by a given pointer, which was allocated by
    *  alloc_f. It is considered an error to invoke this function
@@ -59,7 +60,7 @@ typedef struct alloca_t {
    *
    * \param ptr Pointer to a memory allocated by alloc_f (might be NULL);
    */
-  void (*destroy_f)(const struct alloca_t *, void *ptr);
+  void (*destroy_f)(void *ptr);
 
   /*! Changes the size of the memory block pointed to by ptr to size
    *  bytes.
@@ -67,17 +68,10 @@ typedef struct alloca_t {
    * \param ptr Pointer to a memory allocated by alloc_f (might be NULL);
    * \param size The new size.
    */
-  void *(*realloc_f)(const struct alloca_t *, void *ptr, size_t size);
-
-  /*! Data-pointer that may be retrieved inside alloc_f or destroy_f functions.
-   */
-  void *data;
+  void *(*realloc_f)(void *ptr, size_t size);
 
 } alloca_t;
 
 void alloca_stdlib(alloca_t *ptr);
-void *alloca_stdlib_malloc(const alloca_t *, size_t);
-void *alloca_stdlib_realloc(const alloca_t *, void *ptr, size_t);
-void alloca_stdlib_free(const alloca_t *, void *);
 
 #endif
