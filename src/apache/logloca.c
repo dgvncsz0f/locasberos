@@ -35,27 +35,27 @@
 #include "http_protocol.h"
 #include "http_request.h"
 #include "http_log.h"
-#include "caslib/misc.h"
+#include "caslib/log.h"
 
-void *logloca_ap_debug(const char *msg, ...) {
+void (*logger_ap_debug)(const char *msg, ...) {
     return ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, msg);
 }
 
-void *logloca_ap_info(const char *msg, ...) {
+void (*logger_ap_info)(const char *msg, ...) {
     return ap_log_error(APLOG_MARK, APLOG_INFO, 0, msg);
 }
 
-void *logloca_ap_warn(const char *msg, ...) {
+void (*logger_ap_warn)(const char *msg, ...) {
     return ap_log_error(APLOG_MARK, APLOG_WARNING, 0, msg);
 }
 
-void *logloca_ap_error(const char *msg, ...) {
+void (*logger_ap_error)(const char *msg, ...) {
     return ap_log_error(APLOG_MARK, APLOG_ERR, 0, msg);
 }
 
-void logloca_apache(logloca_t *ptr) {
-  ptr->debug_f = logloca_ap_debug;
-  ptr->info_f  = logloca_ap_info;
-  ptr->warn_f  = logloca_ap_warn;
-  ptr->error_f = logloca_ap_error;
+void logger_apache(logger_t *ptr) {
+  ptr->debug_f = logger_ap_debug;
+  ptr->info_f  = logger_ap_info;
+  ptr->warn_f  = logger_ap_warn;
+  ptr->error_f = logger_ap_error;
 }

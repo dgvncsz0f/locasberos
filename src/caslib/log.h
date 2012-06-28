@@ -28,11 +28,14 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef __LOCASBEROS_LOGLOCA__
-#define __LOCASBEROS_LOGLOCA__
+#ifndef __LOCASBEROS_LOG__
+#define __LOCASBEROS_LOG__
 
-#include "caslib/log.h"
-
-void logger_apache(logger_t *ptr);
+typedef struct logger_t {
+    void (*debug_f)(const char *fmt, ...);
+    void (*info_f)(const char *fmt, ...);
+    void (*warn_f)(const char *fmt, ...);
+    void (*error_f)(const char *fmt, ...);
+} logger_t;
 
 #endif
