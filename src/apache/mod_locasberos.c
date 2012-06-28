@@ -38,7 +38,6 @@
 #include "apr_lib.h"
 
 #include "mod_locasberos.h"
-#include "logloca.h"
 
 #include "caslib/misc.h"
 #include "caslib/caslib.h"
@@ -65,10 +64,6 @@ typedef struct {
 
 static inline
 void locasberos_init_cfg(mod_locasberos_t *cfg) {
-  logloca_t *log;
-  logloca_apache(log);
-  log->info_f("OK");
-
   cfg->enabled             = -1;
   cfg->cas_endpoint        = NULL;
   cfg->cas_login_url       = NULL;
