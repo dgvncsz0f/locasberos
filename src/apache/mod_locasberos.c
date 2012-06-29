@@ -79,13 +79,13 @@ static inline
 void locasberos_init_cfg(mod_locasberos_t *cfg) {
   cfg->enabled             = -1;
   cfg->cas_endpoint        = NULL;
-  cfg->cas_login_url       = NULL;
-  cfg->cas_srvvalidate_url = NULL;
-  cfg->cookie_name         = NULL;
-  cfg->cookie_timeout      = -1;
-  cfg->cookie_path         = NULL;
   cfg->cas_service         = NULL;
-  cfg->cas_renew           = -1;
+  cfg->cas_renew           = 0;
+  cfg->cas_login_url       = "/login";
+  cfg->cas_srvvalidate_url = "/serviceValidate";
+  cfg->cookie_name         = "locasberos";
+  cfg->cookie_timeout      = 60;
+  cfg->cookie_path         = "/";
 }
 
 static
@@ -175,6 +175,8 @@ int locasberos_authenticate(request_rec *r) {
   }
   if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
     status = HTTP_FORBIDDEN;
+  } else {
+    status  = OK;
   }
 
   caslib_rsp_destroy(cas, rsp);
