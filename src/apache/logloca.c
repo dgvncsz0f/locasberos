@@ -42,9 +42,9 @@
 void logger_ap_debug(void *_, const char *format, ...) {
     char *msg;
     va_list args;
-    va_start (args, format);
-    vsprintf (msg,format, args);
-    va_end (args);
+    va_start(args, format);
+    vsprintf(msg, format, args);
+    va_end(args);
     CASLIB_UNUSED(_);
     ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, msg);
 }
@@ -52,9 +52,9 @@ void logger_ap_debug(void *_, const char *format, ...) {
 void logger_ap_info(void *_, const char *format, ...) {
     char *msg;
     va_list args;
-    va_start (args, format);
-    vsprintf (msg,format, args);
-    va_end (args);
+    va_start(args, format);
+    vsprintf(msg, format, args);
+    va_end(args);
     CASLIB_UNUSED(_);
     ap_log_error(APLOG_MARK, APLOG_INFO, 0, msg);
 }
@@ -62,9 +62,9 @@ void logger_ap_info(void *_, const char *format, ...) {
 void logger_ap_warn(void *_, const char *format, ...) {
     char *msg;
     va_list args;
-    va_start (args, format);
-    vsprintf (msg,format, args);
-    va_end (args);
+    va_start(args, format);
+    vsprintf(msg, format, args);
+    va_end(args);
     CASLIB_UNUSED(_);
     ap_log_error(APLOG_MARK, APLOG_WARNING, 0, msg);
 }
@@ -72,9 +72,9 @@ void logger_ap_warn(void *_, const char *format, ...) {
 void logger_ap_error(void *_, const char *format, ...) {
     char *msg;
     va_list args;
-    va_start (args, format);
-    vsprintf (msg,format, args);
-    va_end (args);
+    va_start(args, format);
+    vsprintf(msg, format, args);
+    va_end(args);
     CASLIB_UNUSED(_);
     ap_log_error(APLOG_MARK, APLOG_ERR, 0, msg);
 }
