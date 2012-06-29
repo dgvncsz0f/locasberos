@@ -35,11 +35,4 @@
 
 #define CASLIB_UNUSED(x) (void)(x)
 
-typedef struct logloca_t {
-    void (*debug_f)(const char *fmt, ...);
-    void (*info_f)(const char *fmt, ...);
-    void (*warn_f)(const char *fmt, ...);
-    void (*error_f)(const char *fmt, ...);
-} logloca_t;
-
 #endif

@@ -33,6 +33,7 @@
 extern "C" {
 #include "caslib/misc.h"
 #include "caslib/alloca.h"
+#include "caslib/log.h"
 #include "caslib/caslib.h"
 }
 
@@ -49,6 +50,13 @@ static
 void trace_destroy(void *p) {
   trace_destroy_calls += 1;
   free(p);
+}
+
+TEST(logger_simple_should_initialize_logger_t_and_log) {
+  logger_t logger;
+  logger_simple(&logger);
+  logger.info_f(NULL, "OK");
+  logger.info_f(NULL, "NOT OK");
 }
 
 TEST(caslib_init_with_should_cope_with_malloc_failure) {

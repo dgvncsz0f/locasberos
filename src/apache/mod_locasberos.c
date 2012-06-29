@@ -40,6 +40,7 @@
 #include "apr_lib.h"
 
 #include "mod_locasberos.h"
+#include "logloca.h"
 
 #include "caslib/misc.h"
 #include "caslib/caslib.h"

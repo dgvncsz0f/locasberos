@@ -31,8 +31,8 @@
 #ifndef __LOCASBEROS_LOGLOCA__
 #define __LOCASBEROS_LOGLOCA__
 
-#include "caslib/misc.h"
+#include "caslib/log.h"
 
-void logloca_apache(logloca_t *ptr);
+void logger_apache(logger_t *ptr);
 
 #endif

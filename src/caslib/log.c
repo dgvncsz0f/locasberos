@@ -28,60 +28,63 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <stdlib.h>
+#include <stdio.h>
 #include <stdarg.h>
-#include "httpd.h"
-#include "http_config.h"
-#include "http_core.h"
-#include "http_protocol.h"
-#include "http_request.h"
-#include "http_log.h"
-#include "caslib/misc.h"
-#include "caslib/log.h"
+#include "misc.h"
+#include "log.h"
 
-void logger_ap_debug(void *_, const char *format, ...) {
-    char *msg;
-    va_list args;
-    va_start(args, format);
-    vsprintf(msg, format, args);
-    va_end(args);
-    CASLIB_UNUSED(_);
-    ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, msg);
+void simple_log(const char *msg) {
+    FILE *fp;
+    fp = fopen("test.log", "a+");
+    fwrite(msg, 1, sizeof(msg), fp);
+    fputc('\n', fp);
+    fclose(fp);
 }
 
 void logger_ap_info(void *_, const char *format, ...) {
-    char *msg;
+    char msg[1024];
     va_list args;
     va_start(args, format);
     vsprintf(msg, format, args);
     va_end(args);
     CASLIB_UNUSED(_);
-    ap_log_error(APLOG_MARK, APLOG_INFO, 0, msg);
+    simple_log(msg);
 }
 
 void logger_ap_warn(void *_, const char *format, ...) {
-    char *msg;
+    char msg[1024];
     va_list args;
     va_start(args, format);
     vsprintf(msg, format, args);
     va_end(args);
     CASLIB_UNUSED(_);
-    ap_log_error(APLOG_MARK, APLOG_WARNING, 0, msg);
+    simple_log(msg);
 }
 
 void logger_ap_error(void *_, const char *format, ...) {
-    char *msg;
+    char msg[1024];
     va_list args;
     va_start(args, format);
     vsprintf(msg, format, args);
     va_end(args);
     CASLIB_UNUSED(_);
-    ap_log_error(APLOG_MARK, APLOG_ERR, 0, msg);
+    simple_log(msg);
 }
 
-void logger_apache(logger_t *ptr) {
+void logger_ap_debug(void *_, const char *format, ...) {
+    char msg[1024];
+    va_list args;
+    va_start(args, format);
+    vsprintf(msg, format, args);
+    va_end(args);
+    CASLIB_UNUSED(_);
+    simple_log(msg);
+}
+
+void logger_simple(logger_t *ptr) {
   ptr->debug_f = logger_ap_debug;
   ptr->info_f  = logger_ap_info;
   ptr->warn_f  = logger_ap_warn;
   ptr->error_f = logger_ap_error;
 }
+
