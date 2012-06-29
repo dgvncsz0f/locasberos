@@ -138,8 +138,6 @@ apr_hash_t *parse_query_string(apr_pool_t *pool, char *args) {
 
       // TODO: support multiple values?
       apr_hash_set(query, token, APR_HASH_KEY_STRING, apr_pstrdup(pool, val));
-
-      ;
     }
 
  terminate:
