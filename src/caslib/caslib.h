@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "alloca.h"
+#include "log.h"
 
 typedef struct caslib_t caslib_t;
 typedef struct caslib_rsp_t caslib_rsp_t;
