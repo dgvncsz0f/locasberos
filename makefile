@@ -9,7 +9,7 @@ export CFLAGS          =
 export LDFLAGS         =
 export LIBTOOLFLAGS    = --silent
 
-export APXS          = apxs
+export APXS          = $(shell if which apxs >/dev/null; then echo apxs; else echo apxs2; fi)
 export CC            = gcc
 export CXX           = g++
 export LIBTOOL       = libtool

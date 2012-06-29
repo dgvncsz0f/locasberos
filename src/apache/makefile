@@ -10,6 +10,6 @@ install: $(la_module)
 	$(LIBTOOL) --mode=install cp $^ $(my_libexecdir)
 
 %.la: %.c
-	$(APXS) -c -I$(cfg_srcdir) -L$(root)/usr/lib -lcaslib $^
+	$(APXS) -Wc,-g -c -I$(cfg_srcdir) -L$(root)/usr/lib -lcaslib $^
 
 .SUFFIX: .la

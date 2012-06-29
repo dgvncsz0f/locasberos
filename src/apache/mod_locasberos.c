@@ -31,6 +31,8 @@
 #include "httpd.h"
 #include "http_config.h"
 #include "http_request.h"
+#include "http_core.h"
+#include "http_log.h"
 #include "apr_general.h"
 #include "apr_strings.h"
 #include "apr_tables.h"
@@ -49,6 +51,16 @@
 #define ML_SELECT_IF_INTDEF(a, b, m) (a->m==-1 ? b->m : a ->m)
 
 #define ML_GET_PTRVAL(v, d) (v==NULL ? d : v)
+#define ML_GET_INTVAL(v, d) (v==-1 ? d : v)
+
+#define ML_LOGDEBUG_(s, fmt) ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, fmt)
+#define ML_LOGDEBUG(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, fmt, __VA_ARGS__)
+#define ML_LOGINFO_(s, fmt) ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, fmt)
+#define ML_LOGINFO(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, fmt, __VA_ARGS__)
+#define ML_LOGWARN_(s, fmt) ap_log_error(APLOG_MARK, APLOG_WARN, 0, s, fmt)
+#define ML_LOGWARN(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_WARN, 0, s, fmt, __VA_ARGS__)
+#define ML_LOGERROR_(s, fmt) ap_log_error(APLOG_MARK, APLOG_ERR, 0, s, fmt)
+#define ML_LOGERROR(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_ERR, 0, s, fmt, __VA_ARGS__)
 
 typedef struct {
   int enabled;
@@ -73,14 +85,6 @@ void locasberos_init_cfg(mod_locasberos_t *cfg) {
   cfg->cookie_path         = NULL;
   cfg->cas_service         = NULL;
   cfg->cas_renew           = -1;
-}
-
-static
-void *locasberos_cfg_new_srv(apr_pool_t *pool, server_rec *s) {
-  mod_locasberos_t *cfg = apr_palloc(pool, sizeof(mod_locasberos_t));
-  if (cfg != NULL)
-    locasberos_init_cfg(cfg);
-  return(cfg);
 }
 
 static
@@ -119,8 +123,7 @@ apr_hash_t *parse_query_string(apr_pool_t *pool, char *args) {
     char *ctx                  = NULL;
     char *token                = apr_strtok(args, "&", &ctx);
 
-    while (token != NULL) {
-      token = apr_strtok(NULL, "&", &ctx);
+    for (; token!=NULL; token=apr_strtok(NULL, "&", &ctx)) {
       val   = strchr(token, '=');
       if (val != NULL) {
         *val  = '\0';
@@ -134,6 +137,8 @@ apr_hash_t *parse_query_string(apr_pool_t *pool, char *args) {
 
       // TODO: support multiple values?
       apr_hash_set(query, token, APR_HASH_KEY_STRING, apr_pstrdup(pool, val));
+
+      ;
     }
 
  terminate:
@@ -142,29 +147,45 @@ apr_hash_t *parse_query_string(apr_pool_t *pool, char *args) {
 
 static
 int locasberos_authenticate(request_rec *r) {
-  CASLIB_GOTOIF(r->ap_auth_type==NULL, failure);
-
-  if (apr_strnatcasecmp(r->ap_auth_type, "locasberos"))
-    return(DECLINED);
-
-  mod_locasberos_t *cfg = (mod_locasberos_t *) r->per_dir_config;
-  apr_hash_t *args      = parse_query_string(r->pool, r->args);
-  char *ticket          = apr_hash_get(args, "ticket", APR_HASH_KEY_STRING);
+  mod_locasberos_t *cfg = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
+  const char *auth_type = ap_auth_type(r);
+  apr_hash_t *args      = (r->args==NULL ? NULL : parse_query_string(r->pool, r->args));
+  const char *ticket    = (args==NULL ? NULL : apr_hash_get(args, "ticket", APR_HASH_KEY_STRING));
   caslib_t *cas         = NULL;
   caslib_rsp_t *rsp     = NULL;
   int status            = DECLINED;
 
-  cas = caslib_init(cfg->cas_endpoint);
-  rsp = caslib_service_validate(cas, cfg->cas_service, ticket, false);
-  if (rsp==NULL || !caslib_rsp_auth_success(rsp))
+  if (auth_type==NULL || apr_strnatcasecmp(auth_type, "locasberos")) {
+    ML_LOGDEBUG_(r->server, "ap_auth_type is not set to locasberos, declining!");
+    return(DECLINED);
+  }
+
+  if (cfg->cas_service == NULL) {
+    ML_LOGERROR(r->server, "need CASService: %s", r->uri);
+    return(HTTP_INTERNAL_SERVER_ERROR);
+  }
+  if (cfg->cas_endpoint == NULL) {
+    ML_LOGERROR(r->server, "need CASEndpoint: %s", r->uri);
+    return(HTTP_INTERNAL_SERVER_ERROR);
+  }
+
+  if (ticket != NULL) {
+    cas = caslib_init(cfg->cas_endpoint);
+    CASLIB_GOTOIF(cas==NULL, failure);
+    rsp = caslib_service_validate(cas, cfg->cas_service, ticket, cfg->cas_renew);
+  }
+  if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
     status = HTTP_FORBIDDEN;
+  }
+
   caslib_rsp_destroy(cas, rsp);
   caslib_destroy(cas);
 
   return(status);
 
  failure:
-  return(DECLINED);
+  ML_LOGERROR_(r->server, "internal server error, aborting");
+  return(HTTP_INTERNAL_SERVER_ERROR);
 }
 
 static
@@ -234,7 +255,7 @@ static void locasberos_hooks(apr_pool_t *pool) {
 module AP_DECLARE_DATA locasberos_module = {
   STANDARD20_MODULE_STUFF,
   locasberos_cfg_new_dir,
-  locasberos_cfg_merge,
+  NULL,
   NULL,
   NULL,
   locasberos_cmds,
