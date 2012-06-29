@@ -38,4 +38,6 @@ typedef struct logger_t {
     void (*error_f)(void *ctx, const char *fmt, ...);
 } logger_t;
 
+void logger_simple(logger_t *ptr);
+
 #endif

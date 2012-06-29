@@ -35,7 +35,7 @@
 
 void simple_log(const char *msg) {
     FILE *fp;
-    fp = fopen("log.txt","a+");
+    fp = fopen("test.log", "a+");
     fwrite(msg, 1, sizeof(msg), fp);
     fputc('\n', fp);
     fclose(fp);
