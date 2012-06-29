@@ -38,6 +38,7 @@
 #include <libxml/tree.h>
 #include "misc.h"
 #include "alloca.h"
+#include "log.h"
 #include "caslib.h"
 
 struct caslib_t {
@@ -45,6 +46,7 @@ struct caslib_t {
   char *service_validate_url;
   int timeout;
   alloca_t alloca;
+  logger_t logger;
 };
 
 struct caslib_rsp_t {
@@ -151,11 +153,13 @@ void caslib_global_destroy() {
 
 caslib_t *caslib_init(const char *endpoint) {
   alloca_t alloca;
+  logger_t logger;
   alloca_stdlib(&alloca);
-  return(caslib_init_with(endpoint, &alloca));
+  logger_simple(&logger);
+  return(caslib_init_with(endpoint, &alloca, &logger));
 }
 
-caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
+caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr, const logger_t *logger) {
   caslib_t *p = CASLIB_ALLOC_F_PTR(ptr, sizeof(caslib_t));
   CASLIB_GOTOIF(p==NULL, failure);
   p->endpoint             = NULL;
@@ -164,6 +168,7 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
   p->alloca.alloc_f       = ptr->alloc_f;
   p->alloca.destroy_f     = ptr->destroy_f;
   p->alloca.realloc_f     = ptr->realloc_f;
+  p->logger.debug_f       = logger->debug_f;
 
   p->endpoint = CASLIB_ALLOC_F_PTR(ptr, strlen(endpoint) + 1);
   CASLIB_GOTOIF(p->endpoint==NULL, failure);

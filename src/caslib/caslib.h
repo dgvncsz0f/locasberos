@@ -58,7 +58,7 @@ caslib_t *caslib_init(const char *endpoint);
 /*! Initializes a new caslib_t using a given endpoint and a custom
  *  memory management. This is the dual function of caslib_destroy.
  */
-caslib_t *caslib_init_with(const char *endpoint, const alloca_t *alloca);
+caslib_t *caslib_init_with(const char *endpoint, const alloca_t *alloca, const logger_t *logger);
 
 /*! Checks the validity of a service ticket [1].
  *

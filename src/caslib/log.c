@@ -36,40 +36,11 @@
 void simple_log(const char *msg) {
     FILE *fp;
     fp = fopen("test.log", "a+");
-    fwrite(msg, 1, sizeof(msg), fp);
+    fprintf(fp, "%s", msg);
     fputc('\n', fp);
     fclose(fp);
 }
 
-void logger_ap_info(void *_, const char *format, ...) {
-    char msg[1024];
-    va_list args;
-    va_start(args, format);
-    vsprintf(msg, format, args);
-    va_end(args);
-    CASLIB_UNUSED(_);
-    simple_log(msg);
-}
-
-void logger_ap_warn(void *_, const char *format, ...) {
-    char msg[1024];
-    va_list args;
-    va_start(args, format);
-    vsprintf(msg, format, args);
-    va_end(args);
-    CASLIB_UNUSED(_);
-    simple_log(msg);
-}
-
-void logger_ap_error(void *_, const char *format, ...) {
-    char msg[1024];
-    va_list args;
-    va_start(args, format);
-    vsprintf(msg, format, args);
-    va_end(args);
-    CASLIB_UNUSED(_);
-    simple_log(msg);
-}
 
 void logger_ap_debug(void *_, const char *format, ...) {
     char msg[1024];
@@ -83,8 +54,5 @@ void logger_ap_debug(void *_, const char *format, ...) {
 
 void logger_simple(logger_t *ptr) {
   ptr->debug_f = logger_ap_debug;
-  ptr->info_f  = logger_ap_info;
-  ptr->warn_f  = logger_ap_warn;
-  ptr->error_f = logger_ap_error;
 }
 
