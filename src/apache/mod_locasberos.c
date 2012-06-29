@@ -163,6 +163,7 @@ int locasberos_authenticate(request_rec *r) {
     ML_LOGERROR(r->server, "need CASService: %s", r->uri);
     return(HTTP_INTERNAL_SERVER_ERROR);
   }
+
   if (cfg->cas_endpoint == NULL) {
     ML_LOGERROR(r->server, "need CASEndpoint: %s", r->uri);
     return(HTTP_INTERNAL_SERVER_ERROR);
@@ -173,6 +174,7 @@ int locasberos_authenticate(request_rec *r) {
     CASLIB_GOTOIF(cas==NULL, failure);
     rsp = caslib_service_validate(cas, cfg->cas_service, ticket, cfg->cas_renew);
   }
+
   if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
     status = HTTP_FORBIDDEN;
   } else {
