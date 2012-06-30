@@ -55,7 +55,7 @@ static ngx_http_module_t locasberos_ctx = {
     NULL
 };
 
-ngx_module_t locasberos_module = {
+ngx_module_t mod_locasberos = {
     NGX_MODULE_V1,
     &locasberos_ctx,
     locasberos_cmds,
