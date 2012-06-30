@@ -3,6 +3,7 @@ export root            = $(CURDIR)/dist
 export cfg_srcroot     = $(CURDIR)
 export cfg_srcdir      = $(cfg_srcroot)/src
 export cfg_trydir      = $(cfg_srcroot)/try
+export nginx_srcdir    = $(CURDIR)/../nginx-1.2.1
 export apxs_libexecdir = $(shell $(APXS) -q LIBEXECDIR)
 export CCFLAGS         =
 export CFLAGS          =
@@ -35,8 +36,15 @@ install-try: .setup_env link-try
 compile-modapache: install-caslib
 	@$(MAKE) -C $(cfg_srcdir)/apache compile
 
+compile-modnginx: install-caslib
+	cd $(nginx_srcdir) && ./configure --add-module=$(cfg_srcdir)/nginx/ --prefix=$(cfg_trydir)/tmp/nginx
+	@$(MAKE)
+
 install-modapache: .setup_env compile-modapache
 	@$(MAKE) -C $(cfg_srcdir)/apache install
+
+install-modnginx: .setup_env compile-modnginx
+	@$(MAKE) -C $(nginx_srcdir) install
 
 release:
 	$(cfg_srcdir)/mkversion.h
