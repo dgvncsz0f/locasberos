@@ -55,6 +55,9 @@ test-caslib: link-try
 test-modapache: install-modapache
 	cd $(cfg_trydir)/apache && rspec -O ~/rspec.opts -P "spec/**/*_spec.rb"
 
+test-modnginx: install-modnginx
+	cd $(cfg_trydir)/nginx && rspec -O ~/rspec.opts -P "spec/**/*_spec.rb"
+
 clean:
 	-find $(cfg_srcdir) -type f -name \*.o -exec $(RM) \{\} \;
 	-find $(cfg_srcdir) -type f -name \*.a -exec $(RM) \{\} \;

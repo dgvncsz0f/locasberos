@@ -8,3 +8,5 @@
 doc/build/
 dist/
 try/caslib/try_caslib_dbg
+
+try/tmp
