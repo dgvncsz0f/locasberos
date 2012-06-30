@@ -28,11 +28,62 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef __LOCASBEROS_LOGLOCA__
-#define __LOCASBEROS_LOGLOCA__
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include "misc.h"
+#include "logging.h"
 
-#include "caslib/log.h"
+static
+void __dolog(const char *file, int line, const char *fmt, va_list args) {
+    fprintf(stderr, "%s:%d: ", file, line);
+    vfprintf(stderr, fmt, args);
+    fprintf(stderr, "\n");
+}
 
-void logger_apache(logger_t *ptr);
+static
+void __debug(void *_, const char *file, int line, const char *fmt, ...) {
+  CASLIB_UNUSED(_);
+  va_list args;
+  va_start(args, fmt);
+  fprintf(stderr, "debug ");
+  __dolog(file, line, fmt, args);
+  va_end(args);
+}
 
-#endif
+static
+void __info(void *_, const char *file, int line, const char *fmt, ...) {
+  CASLIB_UNUSED(_);
+  va_list args;
+  va_start(args, fmt);
+  fprintf(stderr, "warn ");
+  __dolog(file, line, fmt, args);
+  va_end(args);
+}
+
+static
+void __warn(void *_, const char *file, int line, const char *fmt, ...) {
+  CASLIB_UNUSED(_);
+  va_list args;
+  va_start(args, fmt);
+  fprintf(stderr, "info ");
+  __dolog(file, line, fmt, args);
+  va_end(args);
+}
+
+static
+void __error(void *_, const char *file, int line, const char *fmt, ...) {
+  CASLIB_UNUSED(_);
+  va_list args;
+  va_start(args, fmt);
+  fprintf(stderr, "error ");
+  __dolog(file, line, fmt, args);
+  va_end(args);
+}
+
+logger_t default_logger = { __debug,
+                            __info,
+                            __warn,
+                            __error
+                          };
+

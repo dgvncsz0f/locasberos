@@ -37,8 +37,6 @@
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 #include "misc.h"
-#include "alloca.h"
-#include "log.h"
 #include "caslib.h"
 
 struct caslib_t {
@@ -53,6 +51,40 @@ struct caslib_rsp_t {
   long status;
   xmlDocPtr xml;
 };
+
+static
+void __libxml_errfunc(void * data, xmlErrorPtr e) {
+  const caslib_t *cas   = (const caslib_t *) data;
+
+  switch (e->level) {
+  case XML_ERR_NONE:
+    CASLIB_INFO(cas->logger,
+                 "%s:%d:%d %s",
+                 e->file,
+                 e->line,
+                 e->int1,
+                 e->message)
+    break;
+  case XML_ERR_WARNING:
+    CASLIB_WARN(cas->logger,
+                 "%s:%d:%d %s",
+                 e->file,
+                 e->line,
+                 e->int1,
+                 e->message)
+    break;
+  case XML_ERR_ERROR:
+  case XML_ERR_FATAL:
+    CASLIB_ERROR(cas->logger,
+                 "%s:%d:%d %s",
+                 e->file,
+                 e->line,
+                 e->int1,
+                 e->message)
+    break;
+  }
+}
+
 
 static
 size_t __write_cc(void *payload, size_t usize, size_t nmemb, void *arg) {
@@ -153,13 +185,11 @@ void caslib_global_destroy() {
 
 caslib_t *caslib_init(const char *endpoint) {
   alloca_t alloca;
-  logger_t logger;
   alloca_stdlib(&alloca);
-  logger_simple(&logger);
-  return(caslib_init_with(endpoint, &alloca, &logger));
+  return(caslib_init_with(endpoint, &alloca));
 }
 
-caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr, const logger_t *logger) {
+caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
   caslib_t *p = CASLIB_ALLOC_F_PTR(ptr, sizeof(caslib_t));
   CASLIB_GOTOIF(p==NULL, failure);
   p->endpoint             = NULL;
@@ -168,7 +198,11 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr, const logg
   p->alloca.alloc_f       = ptr->alloc_f;
   p->alloca.destroy_f     = ptr->destroy_f;
   p->alloca.realloc_f     = ptr->realloc_f;
-  p->logger.debug_f       = logger->debug_f;
+  p->logger.debug_f       = NULL;
+  p->logger.info_f        = NULL;
+  p->logger.warn_f        = NULL;
+  p->logger.error_f       = NULL;
+  p->logger.data          = NULL;
 
   p->endpoint = CASLIB_ALLOC_F_PTR(ptr, strlen(endpoint) + 1);
   CASLIB_GOTOIF(p->endpoint==NULL, failure);
@@ -185,8 +219,17 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr, const logg
   return(NULL);
 }
 
+void caslib_setopt_logging(caslib_t *cas, const logger_t *logger) {
+  cas->logger.debug_f = logger->debug_f;
+  cas->logger.info_f  = logger->info_f;
+  cas->logger.warn_f  = logger->warn_f;
+  cas->logger.error_f = logger->error_f;
+  cas->logger.data    = logger->data;
+}
+
 caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, const char *ticket, bool renew) {
   int rc;
+  long status;
   size_t sz;
   char *url                  = NULL,
        *eservice             = NULL,
@@ -196,10 +239,15 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   CURL *curl                 = NULL;
   struct curl_slist *headers = NULL;
   xmlParserCtxtPtr ctxt      = NULL;
-  caslib_rsp_t *rsp         = NULL;
+  caslib_rsp_t *rsp          = NULL;
 
-  ctxt = xmlCreatePushParserCtxt(NULL, NULL, NULL, 0, "service_validate");
+  CASLIB_DEBUG_(cas->logger, "enter: caslib_service_validate");
+  CASLIB_DEBUG_(cas->logger, " creating xml context...");
+  ctxt = xmlCreatePushParserCtxt(NULL, NULL, NULL, 0, "caslib_service_validate.xml");
   CASLIB_GOTOIF(ctxt==NULL, failure);
+  xmlSetStructuredErrorFunc((void *) cas, __libxml_errfunc);
+
+  CASLIB_DEBUG_(cas->logger, " creating curl handle...");
   curl = curl_easy_init();
   CASLIB_GOTOIF(curl==NULL, failure);
 
@@ -208,6 +256,8 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   CASLIB_GOTOIF(url==NULL, failure);
   rc  = snprintf(url, sz+1, "%s%s", cas->endpoint, cas->service_validate_url);
   CASLIB_GOTOIF(rc<0, failure);
+  CASLIB_DEBUG(cas->logger, " using `%s' to validate service ticket", url);
+
 
   eservice = __uencode_r(cas, curl, "service", service);
   eticket  = __uencode_r(cas, curl, "ticket", ticket);
@@ -218,6 +268,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   CASLIB_GOTOIF(reqbdy==NULL, failure);
   rc       = __joinparams(cas, reqbdy, rc, 3, eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
+  CASLIB_DEBUG(cas->logger, " along with the post fields: %s", reqbdy);
 
   headers = curl_slist_append(headers, "Expect:");
   headers = curl_slist_append(headers, "Content-Type: application/x-www-form-urlencoded");
@@ -231,15 +282,20 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   curl_easy_setopt(curl, CURLOPT_POSTFIELDS, reqbdy);
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, ctxt);
   CURLcode curl_rc = curl_easy_perform(curl);
+  CASLIB_DEBUG(cas->logger, " request made, curl_rc: %d", curl_rc);
   CASLIB_GOTOIF(curl_rc!=0, failure);
+
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+  CASLIB_DEBUG(cas->logger, " http status code: %ld", status);
+
   xmlParseChunk(ctxt, NULL, 0, 1);
+  CASLIB_DEBUG(cas->logger, " response xml well formed: %d", ctxt->wellFormed);
   CASLIB_GOTOIF(! ctxt->wellFormed, failure);
 
   rsp = CASLIB_ALLOC_F(cas->alloca, sizeof(caslib_rsp_t));
   CASLIB_GOTOIF(rsp==NULL, failure);
   rsp->xml    = ctxt->myDoc;
-  rsp->status = 0;
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &rsp->status);
+  rsp->status = status;
   CASLIB_GOTOIF(true, release);
 
  failure:
@@ -258,6 +314,7 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   curl_slist_free_all(headers);
   curl_easy_cleanup(curl);
 
+  CASLIB_DEBUG_(cas->logger, "exit: caslib_service_validate");
   return(rsp);
 }
 

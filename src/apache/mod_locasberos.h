@@ -33,4 +33,8 @@
 
 module AP_MODULE_DECLARE_DATA locasberos_module;
 
+#ifndef LOCASBEROS_MAXLOGMZ
+#define LOCASBEROS_MAXLOGSZ 1024
+#endif
+
 #endif

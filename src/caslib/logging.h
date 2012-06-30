@@ -28,60 +28,33 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#ifndef __LOCASBEROS_LOGGING__
+#define __LOCASBEROS_LOGGING__
+
 #include <stdlib.h>
-#include <stdarg.h>
-#include "httpd.h"
-#include "http_config.h"
-#include "http_core.h"
-#include "http_protocol.h"
-#include "http_request.h"
-#include "http_log.h"
-#include "caslib/misc.h"
-#include "caslib/log.h"
 
-void logger_ap_debug(void *_, const char *format, ...) {
-    char *msg;
-    va_list args;
-    va_start(args, format);
-    vsprintf(msg, format, args);
-    va_end(args);
-    CASLIB_UNUSED(_);
-    ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, msg);
-}
+typedef struct logger_t {
+  void (*debug_f)(void *data, const char *file, int line, const char *fmt, ...);
+  void (*info_f)(void *data, const char *file, int line, const char *fmt, ...);
+  void (*warn_f)(void *data, const char *file, int line, const char *fmt, ...);
+  void (*error_f)(void *data, const char *file, int line, const char *fmt, ...);
+  void *data;
+} logger_t;
 
-void logger_ap_info(void *_, const char *format, ...) {
-    char *msg;
-    va_list args;
-    va_start(args, format);
-    vsprintf(msg, format, args);
-    va_end(args);
-    CASLIB_UNUSED(_);
-    ap_log_error(APLOG_MARK, APLOG_INFO, 0, msg);
-}
+#define CASLIB_DEBUG_(logger, fmt) if (logger.debug_f != NULL) { logger.debug_f(logger.data, __FILE__, __LINE__, fmt); }
+#define CASLIB_DEBUG(logger, fmt, ...) if (logger.debug_f != NULL) { logger.debug_f(logger.data, __FILE__, __LINE__, fmt, __VA_ARGS__); }
 
-void logger_ap_warn(void *_, const char *format, ...) {
-    char *msg;
-    va_list args;
-    va_start(args, format);
-    vsprintf(msg, format, args);
-    va_end(args);
-    CASLIB_UNUSED(_);
-    ap_log_error(APLOG_MARK, APLOG_WARNING, 0, msg);
-}
+#define CASLIB_INFO_(logger, fmt)  if (logger.info_f != NULL) { logger.info_f(logger.data, __FILE__, __LINE__, fmt); }
+#define CASLIB_INFO(logger, fmt, ...)  if (logger.info_f != NULL) { logger.info_f(logger.data, __FILE__, __LINE__, fmt, __VA_ARGS__); }
 
-void logger_ap_error(void *_, const char *format, ...) {
-    char *msg;
-    va_list args;
-    va_start(args, format);
-    vsprintf(msg, format, args);
-    va_end(args);
-    CASLIB_UNUSED(_);
-    ap_log_error(APLOG_MARK, APLOG_ERR, 0, msg);
-}
+#define CASLIB_WARN_(logger, fmt)  if (logger.warn_f != NULL) { logger.warn_f(logger.data, __FILE__, __LINE__, fmt); }
+#define CASLIB_WARN(logger, fmt, ...)  if (logger.warn_f != NULL) { logger.warn_f(logger.data, __FILE__, __LINE__, fmt, __VA_ARGS__); }
 
-void logger_apache(logger_t *ptr) {
-  ptr->debug_f = logger_ap_debug;
-  ptr->info_f  = logger_ap_info;
-  ptr->warn_f  = logger_ap_warn;
-  ptr->error_f = logger_ap_error;
-}
+#define CASLIB_ERROR_(logger, fmt) if (logger.error_f != NULL) { logger.error_f(logger.data, __FILE__, __LINE__, fmt); }
+#define CASLIB_ERROR(logger, fmt, ...) if (logger.error_f != NULL) { logger.error_f(logger.data, __FILE__, __LINE__, fmt, __VA_ARGS__); }
+
+/*! Uses STDERR as the logging medium
+ */
+extern logger_t default_logger;
+
+#endif

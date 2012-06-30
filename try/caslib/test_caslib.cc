@@ -33,7 +33,6 @@
 extern "C" {
 #include "caslib/misc.h"
 #include "caslib/alloca.h"
-#include "caslib/log.h"
 #include "caslib/caslib.h"
 }
 
@@ -52,30 +51,20 @@ void trace_destroy(void *p) {
   free(p);
 }
 
-TEST(logger_simple_should_initialize_logger_t_and_log) {
-  logger_t logger;
-  logger_simple(&logger);
-  logger.debug_f(NULL, "TEST: %s", "TESTED!");
-}
-
 TEST(caslib_init_with_should_cope_with_malloc_failure) {
   alloca_t alloca;
-  logger_t logger;
   alloca.alloc_f   = CASLIB_DUMMY_ALLOC;
   alloca.destroy_f = free;
-  logger_simple(&logger);
-  CHECK(NULL == caslib_init_with("", &alloca, &logger));
+  CHECK(NULL == caslib_init_with("", &alloca));
 }
 
 TEST(caslib_init_with_should_invoke_destroy_for_each_alloca) {
   trace_alloc_calls   = 0;
   trace_destroy_calls = 0;
   alloca_t alloca;
-  logger_t logger;
   alloca.alloc_f   = trace_alloc;
   alloca.destroy_f = trace_destroy;
-  logger_simple(&logger);
-  caslib_destroy(caslib_init_with("", &alloca, &logger));
+  caslib_destroy(caslib_init_with("", &alloca));
   CHECK(trace_alloc_calls > 0);
   CHECK_EQUAL(trace_alloc_calls, trace_destroy_calls);
 }

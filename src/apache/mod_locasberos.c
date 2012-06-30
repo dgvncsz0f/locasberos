@@ -28,6 +28,10 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+#include <ctype.h>
+#include <stdbool.h>
+
 #include "httpd.h"
 #include "http_config.h"
 #include "http_request.h"
@@ -40,13 +44,8 @@
 #include "apr_lib.h"
 
 #include "mod_locasberos.h"
-#include "logloca.h"
-
 #include "caslib/misc.h"
 #include "caslib/caslib.h"
-
-#include <ctype.h>
-#include <stdbool.h>
 
 #define ML_SELECT_IF_PTRDEF(a, b, m) (a->m==NULL ? b->m : a->m)
 #define ML_SELECT_IF_INTDEF(a, b, m) (a->m==-1 ? b->m : a ->m)
@@ -75,8 +74,18 @@ typedef struct {
   int cas_renew;
 } mod_locasberos_t;
 
+static
+void __caslib_logger_func(void *data, const char *file, int line, const char *fmt, ...) {
+  char msg[LOCASBEROS_MAXLOGSZ];
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(msg, LOCASBEROS_MAXLOGSZ, fmt, args);
+  va_end(args);
+  ML_LOGDEBUG_((server_rec *) data, msg);
+}
+
 static inline
-void locasberos_init_cfg(mod_locasberos_t *cfg) {
+void __locasberos_init_cfg(mod_locasberos_t *cfg) {
   cfg->enabled             = -1;
   cfg->cas_endpoint        = NULL;
   cfg->cas_service         = NULL;
@@ -89,34 +98,15 @@ void locasberos_init_cfg(mod_locasberos_t *cfg) {
 }
 
 static
-void *locasberos_cfg_new_dir(apr_pool_t *pool, char *d) {
+void *__locasberos_cfg_new_dir(apr_pool_t *pool, char *d) {
   mod_locasberos_t *cfg = apr_palloc(pool, sizeof(mod_locasberos_t));
   if (cfg != NULL)
-    locasberos_init_cfg(cfg);
+    __locasberos_init_cfg(cfg);
   return(cfg);
 }
 
 static
-void *locasberos_cfg_merge(apr_pool_t *pool, void *vbase, void *vadd) {
-  mod_locasberos_t *base = (mod_locasberos_t *) vbase;
-  mod_locasberos_t *add  = (mod_locasberos_t *) vadd;
-  mod_locasberos_t *cfg  = (mod_locasberos_t *) apr_palloc(pool, sizeof(mod_locasberos_t));
-
-  cfg->enabled             = ML_SELECT_IF_INTDEF(add, base, enabled);
-  cfg->cas_endpoint        = ML_SELECT_IF_PTRDEF(add, base, cas_endpoint);
-  cfg->cas_login_url       = ML_SELECT_IF_PTRDEF(add, base, cas_login_url);
-  cfg->cas_srvvalidate_url = ML_SELECT_IF_PTRDEF(add, base, cas_srvvalidate_url);
-  cfg->cookie_name         = ML_SELECT_IF_PTRDEF(add, base, cookie_name);
-  cfg->cookie_path         = ML_SELECT_IF_PTRDEF(add, base, cookie_path);
-  cfg->cookie_timeout      = ML_SELECT_IF_INTDEF(add, base, cookie_timeout);
-  cfg->cas_service         = ML_SELECT_IF_PTRDEF(add, base, cas_service);
-  cfg->cas_renew           = ML_SELECT_IF_INTDEF(add, base, cas_renew);
-
-  return(cfg);
-}
-
-static
-apr_hash_t *parse_query_string(apr_pool_t *pool, char *args) {
+apr_hash_t *__parse_query_string(apr_pool_t *pool, char *args) {
     apr_hash_t *query          = apr_hash_make(pool);
     CASLIB_GOTOIF(args==NULL, terminate);
     apr_array_header_t *values = NULL;
@@ -145,14 +135,20 @@ apr_hash_t *parse_query_string(apr_pool_t *pool, char *args) {
 }
 
 static
-int locasberos_authenticate(request_rec *r) {
+int __locasberos_authenticate(request_rec *r) {
   mod_locasberos_t *cfg = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
   const char *auth_type = ap_auth_type(r);
-  apr_hash_t *args      = (r->args==NULL ? NULL : parse_query_string(r->pool, r->args));
+  apr_hash_t *args      = (r->args==NULL ? NULL : __parse_query_string(r->pool, r->args));
   const char *ticket    = (args==NULL ? NULL : apr_hash_get(args, "ticket", APR_HASH_KEY_STRING));
   caslib_t *cas         = NULL;
   caslib_rsp_t *rsp     = NULL;
+  logger_t logger;
   int status            = DECLINED;
+
+  logger.debug_f = __caslib_logger_func;
+  logger.info_f  = __caslib_logger_func;
+  logger.warn_f  = __caslib_logger_func;
+  logger.error_f = __caslib_logger_func;
 
   if (auth_type==NULL || apr_strnatcasecmp(auth_type, "locasberos")) {
     ML_LOGDEBUG_(r->server, "ap_auth_type is not set to locasberos, declining!");
@@ -172,6 +168,7 @@ int locasberos_authenticate(request_rec *r) {
   if (ticket != NULL) {
     cas = caslib_init(cfg->cas_endpoint);
     CASLIB_GOTOIF(cas==NULL, failure);
+    caslib_setopt_logging(cas, &logger);
     rsp = caslib_service_validate(cas, cfg->cas_service, ticket, cfg->cas_renew);
   }
 
@@ -193,7 +190,6 @@ int locasberos_authenticate(request_rec *r) {
 
 static
 const command_rec locasberos_cmds[] = {
-  // TODO: allow per-server config?
   AP_INIT_FLAG("CasEnabled",
                ap_set_flag_slot,
                (void *) APR_OFFSETOF(mod_locasberos_t, enabled),
@@ -249,18 +245,19 @@ apr_status_t __caslib_global_destroy(void *_) {
   return(OK);
 }
 
-static void locasberos_hooks(apr_pool_t *pool) {
+static
+void __locasberos_hooks(apr_pool_t *pool) {
   caslib_global_init();
   apr_pool_cleanup_register(pool, NULL, __caslib_global_destroy, apr_pool_cleanup_null);
-  ap_hook_check_user_id(locasberos_authenticate, NULL, NULL, APR_HOOK_MIDDLE);
+  ap_hook_check_user_id(__locasberos_authenticate, NULL, NULL, APR_HOOK_MIDDLE);
 }
 
 module AP_DECLARE_DATA locasberos_module = {
   STANDARD20_MODULE_STUFF,
-  locasberos_cfg_new_dir,
+  __locasberos_cfg_new_dir,
   NULL,
   NULL,
   NULL,
   locasberos_cmds,
-  locasberos_hooks
+  __locasberos_hooks
 };

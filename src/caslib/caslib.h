@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "alloca.h"
-#include "log.h"
+#include "logging.h"
 
 typedef struct caslib_t caslib_t;
 typedef struct caslib_rsp_t caslib_rsp_t;
@@ -59,7 +59,11 @@ caslib_t *caslib_init(const char *endpoint);
 /*! Initializes a new caslib_t using a given endpoint and a custom
  *  memory management. This is the dual function of caslib_destroy.
  */
-caslib_t *caslib_init_with(const char *endpoint, const alloca_t *alloca, const logger_t *logger);
+caslib_t *caslib_init_with(const char *endpoint, const alloca_t *alloca);
+
+/*! Defines the logger to use.
+ */
+void caslib_setopt_logging(caslib_t *cas, const logger_t *logger);
 
 /*! Checks the validity of a service ticket [1].
  *
