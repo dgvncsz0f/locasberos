@@ -3,9 +3,15 @@
 read -p "major: " major
 read -p "minor: " minor
 read -p "patch: " patch
-read -p "build: " build
+read -p "build: " buildv
 
-version="$major.$minor.$patch+build.$build"
+if [ -n "$buildv" ]
+then
+  build="+$buildv"
+else
+  build=""
+fi
+version="$major.$minor.$patch$build"
 
 echo "v$version"
 
@@ -49,10 +55,9 @@ cat >src/caslib/version.h <<ENDL
 
 #define CASLIB_PATCH $patch
 
-#define CASLIB_BUILD $build
+#define CASLIB_BUILD "$build"
 
-// Follow the semantic versioning way http://semver.org
-// The string: "%d.%d.%d+build.%s", MAJOR, MINOR, PATCH, BUILD
+// The string: ("%d.%d.%d%s", MAJOR, MINOR, PATCH, BUILD)
 #define CASLIB_VERSION "$version"
 
 #endif

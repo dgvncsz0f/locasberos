@@ -37,11 +37,10 @@
 
 #define CASLIB_PATCH 0
 
-#define CASLIB_BUILD 1
+#define CASLIB_BUILD "+unstable"
 
-// Follow the semantic versioning way http://semver.org
-// The string: "%d.%d.%d+build.%s", MAJOR, MINOR, PATCH, BUILD
-#define CASLIB_VERSION "0.1.0+build.1"
+// The string: ("%d.%d.%d%s", MAJOR, MINOR, PATCH, BUILD)
+#define CASLIB_VERSION "0.1.0+unstable"
 
 #endif
 
