@@ -29,11 +29,6 @@ License
 
 BSD3
 
-Documentation
-=============
-
-* http://dsouza.githb.com/locasberos
-
 Authors
 =======
 
