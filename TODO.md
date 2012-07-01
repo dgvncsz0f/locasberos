@@ -1,5 +1,6 @@
-TODO LIST
-=========
+<!--- -*- coding: utf-8; mode: org; -*- -->
+
+# TODO LIST
 
   * [X] Logging infrastructure
     * [X] caslib/logger infrastructure
@@ -8,6 +9,7 @@ TODO LIST
 
   * [-] Implement locasberos authentication function
     * [X] use caslib to validate service ticket
+    * [ ] /login redirect
     * [ ] emit cookie whenever authentication succeeds
     * [ ] validate cookie
     * [ ] inject cas information into the request (username, attributes etc.)

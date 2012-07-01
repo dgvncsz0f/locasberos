@@ -72,6 +72,7 @@ typedef struct {
   char *cookie_path;
   char *cas_service;
   int cas_renew;
+  int cas_gateway;
 } mod_locasberos_t;
 
 static
@@ -90,6 +91,7 @@ void __locasberos_init_cfg(mod_locasberos_t *cfg) {
   cfg->cas_endpoint        = NULL;
   cfg->cas_service         = NULL;
   cfg->cas_renew           = 0;
+  cfg->cas_gateway         = 0;
   cfg->cas_login_url       = "/login";
   cfg->cas_srvvalidate_url = "/serviceValidate";
   cfg->cookie_name         = "locasberos";
@@ -126,7 +128,6 @@ apr_hash_t *__parse_query_string(apr_pool_t *pool, char *args) {
         ap_unescape_url(token);
       }
 
-      // TODO: support multiple values?
       apr_hash_set(query, token, APR_HASH_KEY_STRING, apr_pstrdup(pool, val));
     }
 
@@ -175,15 +176,20 @@ int __locasberos_authenticate(request_rec *r) {
     CASLIB_GOTOIF(cas==NULL, failure);
     caslib_setopt_logging(cas, &logger);
     rsp = caslib_service_validate(cas, cfg->cas_service, ticket, cfg->cas_renew);
+  } else {
+    ML_LOGDEBUG(r->server, "no ticket found: %s", r->uri);
   }
 
   if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
+    ML_LOGDEBUG(r->server, "cas authentication failure: %s", r->uri);
     status = HTTP_FORBIDDEN;
   } else {
+    ML_LOGDEBUG(r->server, "cas authentication success: %s", r->uri);
     status  = OK;
   }
 
-  caslib_rsp_destroy(cas, rsp);
+  if (cas != NULL)
+    caslib_rsp_destroy(cas, rsp);
   caslib_destroy(cas);
 
   return(status);
@@ -239,7 +245,12 @@ const command_rec locasberos_cmds[] = {
                 ap_set_flag_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_renew),
                 OR_AUTHCFG,
-                "Define whether or not setting the renew flag when validating the service ticket"),
+                "Define whether or not setting the renew flag when redirecting to loginUrl or validating the service ticket"),
+  AP_INIT_FLAG("CasGateway",
+               ap_set_flag_slot,
+               (void *) APR_OFFSETOF(mod_locasberos_t, cas_gateway),
+               OR_AUTHCFG,
+               "Define whether or not setting the gateway flag when redirecting to loginUrl"),
   { NULL }
 };
 
