@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # vim: et:ts=8:sw=2:sts=2
 #
-# Copyright (c) 2012 dsouza
+# Copyright (c) 2012 dgvncsz0f
 # Copyright (c) 2012 pothix
 # Copyright (c) 2012 morellon
 # All rights reserved.
