@@ -32,7 +32,8 @@ BSD3
 Authors
 =======
 
-* dgvncsz0f <dgvncsz0f at bitforest.org>
-* pothix <pothix at pothix.com>
-* morellon <morellon at gmail.com>
+* `dgvncsz0f <http://github.com/dgvncsz0f>`_ <dgvncsz0f at bitforest.org>
 
+* `pothix <http://github.com/pothix>`_ <pothix at pothix.com>
+
+* `morellon <http://github.com/morellon>`_ <morellon at gmail.com>
