@@ -32,7 +32,7 @@ BSD3
 Authors
 =======
 
-* dsouza <dsouza at bitforest.org>
+* dsouza <dgvncsz0f at bitforest.org>
 * pothix <pothix at pothix.com>
 * morellon <morellon at gmail.com>
 
