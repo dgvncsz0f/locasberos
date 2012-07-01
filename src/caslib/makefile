@@ -2,7 +2,7 @@
 SRC_FILES = $(shell find $(cfg_srcdir)/caslib -type f -name \*.c)
 LNK_NAME  = libcaslib
 
-include $(cfg_srcroot)/makefile.rules
+include $(cfg_srcdir)/makefile.rules
 
 .PHONY: compile
 compile: CFLAGS += -W -Wall -pedantic -std=c99 -I/usr/include/libxml2
