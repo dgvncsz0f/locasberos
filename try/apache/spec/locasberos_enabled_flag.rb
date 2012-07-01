@@ -31,24 +31,35 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 require "spec_helper"
-require "httparty"
 
-describe :vhost do
+describe :locasberosenabled_flag do
 
-  it "should reply 403 for unauthenticated requests" do
+  it "should really turnoff/turnon the module" do
     with_apache([ mod_locasberos,
-                  vhost_begin,
-                  ' ServerName localhost',
-                  ' <Location /index.txt>',
-                  '  CASEnabled On',
-                  '  CasEndpoint "http://localhost"',
-                  '  CasService "localhost"',
-                  '  AuthType locasberos',
-                  '  Require valid-user',
-                  ' </Location>',
-                  vhost_end
+                  "<Location />",
+                  " LocasberosEnabled Off",
+                  " CasEndpoint http://localhost",
+                  " CasService undefined",
+                  " AuthType Locasberos",
+                  " Require valid-user",
+                  "</Location>"
                 ]) do
-      response = HTTParty.get(url4("/index.txt", "localhost"))
+      response = AuthBasicHTTP.get(url4("/index.txt"))
+      # N.B.: when all auth modules decline, apache issues a internal
+      #       server error response.
+      response.code.should == 500
+    end
+
+    with_apache([ mod_locasberos,
+                  "<Location />",
+                  " LocasberosEnabled On",
+                  " CasEndpoint http://localhost",
+                  " CasService undefined",
+                  " AuthType Locasberos",
+                  " Require valid-user",
+                  "</Location>"
+                ]) do
+      response = AuthBasicHTTP.get(url4("/index.txt"))
       response.code.should == 403
     end
   end

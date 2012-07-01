@@ -32,22 +32,37 @@
 
 require "spec_helper"
 
-describe :authtype do
+describe :authtype_flag do
 
   it "must not interfere with other authentication methods" do
     with_apache([ mod_locasberos,
-                  '<Location />',
-                  ' CASEnabled On',
-                  ' AuthType Basic',
-                  ' CasEndpoint "http://localhost"',
-                  ' CasService "localhost"',
-                  ' AuthName "rspec"',
-                  ' AuthUserFile passwd.db',
-                  ' Require valid-user',
-                  '</Location>'
+                  "<Location />",
+                  " LocasberosEnabled On",
+                  " CasEndpoint http://localhost",
+                  " CasService undefined",
+                  " AuthType Basic",
+                  " AuthName rspec",
+                  " AuthUserFile passwd.db",
+                  " Require valid-user",
+                  "</Location>"
                 ]) do
       response = AuthBasicHTTP.get(url4("/index.txt"))
       response.code.should == 200
+    end
+  end
+
+  it "must handle authentication when authtype = locasberos" do
+    with_apache([ mod_locasberos,
+                  "<Location />",
+                  " LocasberosEnabled On",
+                  " CasEndpoint http://localhost",
+                  " CasService undefined",
+                  " AuthType Locasberos",
+                  " Require valid-user",
+                  "</Location>"
+                ]) do
+      response = HTTParty.get(url4("/index.txt"))
+      response.code.should == 403
     end
   end
 

@@ -7,7 +7,7 @@ compile: $(la_module)
 
 .PHONY: install
 install: $(la_module)
-	$(LIBTOOL) --mode=install cp $^ $(my_libexecdir)
+	$(LIBTOOL) $(LIBTOOLFLAGS) --mode=install cp $^ $(my_libexecdir)
 
 %.la: %.c
 	$(APXS) -Wc,-g -c -I$(cfg_srcdir) -L$(root)/usr/lib -lcaslib_dbg $^

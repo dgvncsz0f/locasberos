@@ -47,6 +47,10 @@ $listen_host = "127.0.0.1"
 $listen_port = 9999
 $endpoint    = "http://" + $listen_host + ":" + $listen_port.to_s
 
+def cat(f)
+  File.open(f, "r") {|f| f.read}
+end
+
 def libexecdir
   IO.popen("#{$bin_apxs} -q LIBEXECDIR") {|f| f.read.strip}
 end
@@ -54,6 +58,11 @@ end
 def url4(path, vhost=nil)
   name = (vhost.nil? ? $listen_host : vhost)
   "http://" + name + ":" + $listen_port.to_s + path
+end
+
+def url4_fixture(path)
+  root = File.expand_path(File.dirname(__FILE__) + "/../../../try/fixtures")
+  "file://" + root + path
 end
 
 def vhost_begin
@@ -109,7 +118,7 @@ def configure(config=[])
   File.open(server_root + "/v_www/index.txt", "w") {|f1| f1.write("Ok") }
   File.open(server_root + "/apache.cfg", "w") {|f1| f1.write(template) }
 
-  return(server_root)
+  return([server_root, template])
 end
 
 def apache_start(server_root)
@@ -147,16 +156,24 @@ def apache_stop(server_root)
 end
 
 def with_apache(config=[], &proc)
-  server_root = configure(config)
+  (root,cfg) = configure(config)
+  errorlog   = "#{root}/logs/error.log"
   begin
-    apache_start(server_root)
+    apache_start(root)
     begin
       proc.call()
     ensure
-      apache_stop(server_root)
+      apache_stop(root)
     end
+  rescue
+    puts "\n> exceptiong caught..."
+    puts "> apache.cfg: "
+    cfg.lines.each {|l| puts ">> #{l}"}
+    puts "> error.log: "
+    cat(errorlog).lines.each {|l| puts ">> #{l}"}
+    raise
   ensure
-    clean(server_root)
+    clean(root)
   end
 end
 

@@ -151,7 +151,12 @@ int __locasberos_authenticate(request_rec *r) {
   logger.error_f = __caslib_logger_func;
 
   if (auth_type==NULL || apr_strnatcasecmp(auth_type, "locasberos")) {
-    ML_LOGDEBUG_(r->server, "ap_auth_type is not set to locasberos, declining!");
+    ML_LOGDEBUG(r->server, "ap_auth_type is not set to locasberos, declining: %s", r->uri);
+    return(DECLINED);
+  }
+
+  if (! cfg->enabled) {
+    ML_LOGDEBUG(r->server, "cas_enabled set to Off, declining: %s", r->uri);
     return(DECLINED);
   }
 
@@ -184,13 +189,13 @@ int __locasberos_authenticate(request_rec *r) {
   return(status);
 
  failure:
-  ML_LOGERROR_(r->server, "internal server error, aborting");
+  ML_LOGERROR(r->server, "internal server error, aborting: %s", r->uri);
   return(HTTP_INTERNAL_SERVER_ERROR);
 }
 
 static
 const command_rec locasberos_cmds[] = {
-  AP_INIT_FLAG("CasEnabled",
+  AP_INIT_FLAG("LocasberosEnabled",
                ap_set_flag_slot,
                (void *) APR_OFFSETOF(mod_locasberos_t, enabled),
                OR_AUTHCFG,
