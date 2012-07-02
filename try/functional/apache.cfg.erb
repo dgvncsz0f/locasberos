@@ -1,0 +1,34 @@
+LoadModule auth_basic_module <%= libexecdir %>/mod_auth_basic.so
+LoadModule authn_file_module <%= libexecdir %>/mod_authn_file.so
+LoadModule authz_user_module <%= libexecdir %>/mod_authz_user.so
+LoadModule authz_default_module <%= libexecdir %>/mod_authz_default.so
+LoadModule authz_host_module <%= libexecdir %>/mod_authz_host.so
+
+Listen <%= listen_host %>:<%= listen_port %>
+NameVirtualHost *:<%= listen_port %>
+<VirtualHost *:<%= listen_port %>>
+  DocumentRoot v_www
+</VirtualHost>
+<Location />
+ Order allow,deny
+ Allow from all
+</Location>
+ServerName 127.0.0.1
+LockFile accept.lock
+PidFile  apache.pid
+Timeout 300
+KeepAlive Off
+User ${USER}
+DefaultType None
+HostnameLookups Off
+ErrorLog logs/error.log
+DocumentRoot www
+
+LoadModule locasberos_module <%= root %>/<%= libexecdir %>/mod_locasberos.so
+<Location /<%= page %>>
+	LocasberosEnabled <%= enabled %>
+	CasEndpoint <%= endpoint %>
+	CasService <%= cas_service %>
+	AuthType <%= auth_type %>
+	Require <%= require_type %>
+</Location>
