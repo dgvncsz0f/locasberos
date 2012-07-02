@@ -1,0 +1,30 @@
+worker_processes  1;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
+    keepalive_timeout  65;
+
+    server {
+		listen       <%= listen_port %>;
+		server_name  <%= listen_host %>;
+
+		location /<%= page %> {
+            root   html;
+            index  index.html index.htm;
+
+			<%= display_key "locasberos_enabled", enabled %>
+			<%= display_key "cas_endpoint", endpoint %>
+			<%= display_key "cas_service", cas_service %>
+			<%= display_key "auth_type", auth_type %>
+			<%= display_key "auth_namej", auth_name %>
+			<%= display_key "auth_user_file", auth_user_file %>
+			<%= display_key "require", require_type %>
+        }
+    }
+}
