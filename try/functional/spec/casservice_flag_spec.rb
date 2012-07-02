@@ -33,12 +33,14 @@
 require "spec_helper"
 
 describe :casservice_flag do
-  it "should reply 500 when missing" do
-    config = Apache.new
-    config.cas_service = nil
-    config.with_apache do
-      response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=FOO"))
-      response.code.should == 500
+  WEBSERVERS.each do |webserver|
+    it "should reply 500 when missing" do
+      config = webserver.new
+      config.cas_service = nil
+      config.run do
+        response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=FOO"))
+        response.code.should == 500
+      end
     end
   end
 end

@@ -33,11 +33,13 @@
 require "spec_helper"
 
 describe :access_denied do
-  it "should reply 403 when authentication fails" do
-    config = Apache.new
-    config.with_apache do
-      response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=UNDEFINED"))
-      response.code.should == 403
+  WEBSERVERS.each do |webserver|
+    it "should reply 403 when authentication fails" do
+      config = webserver.new
+      config.run do
+        response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=UNDEFINED"))
+        response.code.should == 403
+      end
     end
   end
 end

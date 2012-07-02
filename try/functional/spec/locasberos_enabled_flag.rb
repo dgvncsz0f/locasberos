@@ -33,21 +33,22 @@
 require "spec_helper"
 
 describe :locasberosenabled_flag do
+  WEBSERVERS.each do |webserver|
+    it "should really turnoff/turnon the module" do
+      config = webserver.new
+      config.enabled = "Off"
+      config.run do
+        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
+        # N.B.: when all auth modules decline, apache issues a internal
+        #       server error response.
+        response.code.should == 500
+      end
 
-  it "should really turnoff/turnon the module" do
-    config = Apache.new
-    config.enabled = "Off"
-    config.with_apache do
-      response = AuthBasicHTTP.get(config.url_for("/index.txt"))
-      # N.B.: when all auth modules decline, apache issues a internal
-      #       server error response.
-      response.code.should == 500
-    end
-
-    config.enabled = "On"
-    config.with_apache do
-      response = AuthBasicHTTP.get(config.url_for("/index.txt"))
-      response.code.should == 403
+      config.enabled = "On"
+      config.run do
+        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
+        response.code.should == 403
+      end
     end
   end
 end

@@ -33,12 +33,14 @@
 require "spec_helper"
 
 describe :casendpoint_flag do
-  it "should reply 500 when missing" do
-    config = Apache.new
-    config.endpoint = nil
-    config.with_apache do
-      response = AuthBasicHTTP.get(config.url_for("/index.txt"))
-      response.code.should == 500
+  WEBSERVERS.each do |webserver|
+    it "should reply 500 when missing" do
+      config = webserver.new
+      config.endpoint = nil
+      config.run do
+        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
+        response.code.should == 500
+      end
     end
   end
 end

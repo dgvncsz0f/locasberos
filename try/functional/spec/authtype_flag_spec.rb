@@ -33,24 +33,26 @@
 require "spec_helper"
 
 describe :authtype_flag do
-  it "must not interfere with other authentication methods" do
-    config = Apache.new
-    config.endpoint = "http://localhost"
-    config.auth_type = "Basic"
-    config.auth_name = "rspec"
-    config.auth_user_file = "passwd.db"
-    config.with_apache do
-      response = AuthBasicHTTP.get(config.url_for("/index.txt"))
-      response.code.should == 200
+  WEBSERVERS.each do |webserver|
+    it "must not interfere with other authentication methods" do
+      config = webserver.new
+      config.endpoint = "http://localhost"
+      config.auth_type = "Basic"
+      config.auth_name = "rspec"
+      config.auth_user_file = "passwd.db"
+      config.run do
+        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
+        response.code.should == 200
+      end
     end
-  end
 
-  it "must handle authentication when authtype = locasberos" do
-    config = Apache.new
-    config.endpoint = "http://localhost"
-    config.with_apache do
-      response = HTTParty.get(config.url_for("/index.txt"))
-      response.code.should == 403
+    it "must handle authentication when authtype = locasberos" do
+      config = webserver.new
+      config.endpoint = "http://localhost"
+      config.run do
+        response = HTTParty.get(config.url_for("/index.txt"))
+        response.code.should == 403
+      end
     end
   end
 end

@@ -33,13 +33,14 @@
 require "spec_helper"
 
 describe :access_granted do
-
-  it "should reply 200 when authentication succeeds" do
-    config = Apache.new
-    config.endpoint = config.url_for_fixture("/auth_success")
-    config.with_apache do
-      response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=UNDEFINED"))
-      response.code.should == 200
+  WEBSERVERS.each do |webserver|
+    it "should reply 200 when authentication succeeds" do
+      config = webserver.new
+      config.endpoint = config.url_for_fixture("/auth_success")
+      config.run do
+        response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=UNDEFINED"))
+        response.code.should == 200
+      end
     end
   end
 end

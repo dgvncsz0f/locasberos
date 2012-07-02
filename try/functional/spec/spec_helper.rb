@@ -48,6 +48,10 @@ end
 $bin_apxs    = find_x("/usr/sbin/apxs",  "/usr/bin/apxs", "/usr/sbin/apxs2", "/usr/bin/apxs2")
 $bin_httpd   = find_x("/usr/sbin/httpd", "/usr/bin/httpd", "/usr/sbin/apache2", "/usr/bin/apache2")
 
+WEBSERVERS = [
+  Apache
+]
+
 def cat(f)
   File.open(f, "r") {|f| f.read}
 end
