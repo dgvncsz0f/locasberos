@@ -1,6 +1,6 @@
 require "spec/spec_helper"
 
-class ApacheConfig < LocasberosTestConfig
+class Apache < Locasberos
 
   def base_file
     File.expand_path(File.dirname(__FILE__) + "/apache.cfg.erb")
@@ -63,7 +63,7 @@ class ApacheConfig < LocasberosTestConfig
   end
 
   def configure
-    tmp_root      = File.expand_path(File.dirname(__FILE__) + "/../tmp")
+    tmp_root      = File.expand_path(File.dirname(__FILE__) + "/../../tmp")
     server_root   = Dir.mktmpdir(nil, tmp_root)
 
     FileUtils.mkdir_p(server_root + "/logs")

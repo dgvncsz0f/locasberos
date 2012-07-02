@@ -38,8 +38,8 @@ require "fileutils"
 
 $LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__) + "/../"))
 
-require "locasberos_test_config"
-require "apache_config"
+require "locasberos"
+require "apache/apache"
 
 def find_x(*candidates)
   candidates.select {|f| FileTest.executable?(f)}.first

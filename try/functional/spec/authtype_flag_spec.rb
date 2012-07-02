@@ -34,7 +34,7 @@ require "spec_helper"
 
 describe :authtype_flag do
   it "must not interfere with other authentication methods" do
-    config = ApacheConfig.new
+    config = Apache.new
     config.endpoint = "http://localhost"
     config.auth_type = "Basic"
     config.auth_name = "rspec"
@@ -46,7 +46,7 @@ describe :authtype_flag do
   end
 
   it "must handle authentication when authtype = locasberos" do
-    config = ApacheConfig.new
+    config = Apache.new
     config.endpoint = "http://localhost"
     config.with_apache do
       response = HTTParty.get(config.url_for("/index.txt"))

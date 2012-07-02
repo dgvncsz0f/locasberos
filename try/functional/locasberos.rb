@@ -1,4 +1,4 @@
-class LocasberosTestConfig
+class Locasberos
   attr_accessor :listen_host, :listen_port, :root,
                 :xdir, :page, :enabled, :endpoint,
                 :cas_service, :require_type,

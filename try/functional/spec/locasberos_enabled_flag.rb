@@ -35,7 +35,7 @@ require "spec_helper"
 describe :locasberosenabled_flag do
 
   it "should really turnoff/turnon the module" do
-    config = ApacheConfig.new
+    config = Apache.new
     config.enabled = "Off"
     config.with_apache do
       response = AuthBasicHTTP.get(config.url_for("/index.txt"))

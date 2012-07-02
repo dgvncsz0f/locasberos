@@ -35,7 +35,7 @@ require "spec_helper"
 describe :access_granted do
 
   it "should reply 200 when authentication succeeds" do
-    config = ApacheConfig.new
+    config = Apache.new
     config.endpoint = config.url_for_fixture("/auth_success")
     config.with_apache do
       response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=UNDEFINED"))
