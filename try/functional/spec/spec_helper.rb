@@ -40,6 +40,7 @@ $LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__) + "/../"))
 
 require "locasberos"
 require "apache/apache"
+require "nginx/nginx"
 
 def find_x(*candidates)
   candidates.select {|f| FileTest.executable?(f)}.first
@@ -49,7 +50,7 @@ $bin_apxs    = find_x("/usr/sbin/apxs",  "/usr/bin/apxs", "/usr/sbin/apxs2", "/u
 $bin_httpd   = find_x("/usr/sbin/httpd", "/usr/bin/httpd", "/usr/sbin/apache2", "/usr/bin/apache2")
 
 WEBSERVERS = [
-  Apache
+  Apache #, Nginx
 ]
 
 def cat(f)

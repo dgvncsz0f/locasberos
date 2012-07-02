@@ -30,6 +30,10 @@ class Nginx < Locasberos
   def configure
     tmp_root      = File.expand_path(File.dirname(__FILE__) + "/../../tmp")
     server_root   = Dir.mktmpdir(nil, tmp_root)
+    FileUtils.cp(
+      File.expand_path(File.dirname(__FILE__) + "/mime.types"),
+      server_root + "/mime.types"
+    )
 
     File.open(server_root + "/nginx.conf", "w") {|f1| f1.write(template) }
     server_root
