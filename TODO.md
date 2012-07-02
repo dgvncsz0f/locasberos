@@ -11,7 +11,7 @@
 
   * [-] Implement locasberos authentication function
     * [X] use caslib to validate service ticket
-    * [ ] CASService printf-like support
+    * [ ] CASService: defines reasonable default
     * [ ] /login redirect
     * [ ] emit cookie whenever authentication succeeds
     * [ ] validate cookie

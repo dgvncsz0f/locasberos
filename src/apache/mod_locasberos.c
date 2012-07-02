@@ -38,6 +38,7 @@
 #include "http_core.h"
 #include "http_log.h"
 #include "apr_general.h"
+#include "apr_uri.h"
 #include "apr_strings.h"
 #include "apr_tables.h"
 #include "apr_hash.h"
@@ -57,8 +58,8 @@
 #define ML_LOGDEBUG(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, fmt, __VA_ARGS__)
 #define ML_LOGINFO_(s, fmt) ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, fmt)
 #define ML_LOGINFO(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, fmt, __VA_ARGS__)
-#define ML_LOGWARN_(s, fmt) ap_log_error(APLOG_MARK, APLOG_WARN, 0, s, fmt)
-#define ML_LOGWARN(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_WARN, 0, s, fmt, __VA_ARGS__)
+#define ML_LOGWARN_(s, fmt) ap_log_error(APLOG_MARK, APLOG_WARNING, 0, s, fmt)
+#define ML_LOGWARN(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_WARNING, 0, s, fmt, __VA_ARGS__)
 #define ML_LOGERROR_(s, fmt) ap_log_error(APLOG_MARK, APLOG_ERR, 0, s, fmt)
 #define ML_LOGERROR(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_ERR, 0, s, fmt, __VA_ARGS__)
 
@@ -141,6 +142,7 @@ int __locasberos_authenticate(request_rec *r) {
   const char *auth_type = ap_auth_type(r);
   apr_hash_t *args      = (r->args==NULL ? NULL : __parse_query_string(r->pool, r->args));
   const char *ticket    = (args==NULL ? NULL : apr_hash_get(args, "ticket", APR_HASH_KEY_STRING));
+  const char *service   = cfg->cas_service;
   caslib_t *cas         = NULL;
   caslib_rsp_t *rsp     = NULL;
   logger_t logger;
@@ -175,7 +177,7 @@ int __locasberos_authenticate(request_rec *r) {
     cas = caslib_init(cfg->cas_endpoint);
     CASLIB_GOTOIF(cas==NULL, failure);
     caslib_setopt_logging(cas, &logger);
-    rsp = caslib_service_validate(cas, cfg->cas_service, ticket, cfg->cas_renew);
+    rsp = caslib_service_validate(cas, service, ticket, cfg->cas_renew);
   } else {
     ML_LOGDEBUG(r->server, "no ticket found: %s", r->uri);
   }

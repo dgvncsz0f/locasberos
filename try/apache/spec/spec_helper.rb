@@ -124,6 +124,8 @@ end
 def apache_start(server_root)
   cmd = $bin_httpd +
         " -k start" +
+        " -C LogLevel\\ debug" +
+        " -e error" +
         " -f "+ server_root +"/apache.cfg" +
         " -d "+ server_root
   IO.popen(cmd) { Process.wait }
@@ -167,8 +169,8 @@ def with_apache(config=[], &proc)
     end
   rescue
     puts "\n> exceptiong caught..."
-    puts "> apache.cfg: "
-    cfg.lines.each {|l| puts ">> #{l}"}
+    # puts "> apache.cfg: "
+    # cfg.lines.each {|l| puts ">> #{l}"}
     puts "> error.log: "
     cat(errorlog).lines.each {|l| puts ">> #{l}"}
     raise

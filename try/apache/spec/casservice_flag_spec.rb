@@ -44,7 +44,7 @@ describe :casservice_flag do
                   " Require valid-user",
                   "</Location>"
                 ]) do
-      response = AuthBasicHTTP.get(url4("/index.txt"))
+      response = AuthBasicHTTP.get(url4("/index.txt?ticket=FOO"))
       response.code.should == 500
     end
   end
