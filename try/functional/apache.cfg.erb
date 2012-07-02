@@ -26,9 +26,11 @@ DocumentRoot www
 
 LoadModule locasberos_module <%= root %>/<%= libexecdir %>/mod_locasberos.so
 <Location /<%= page %>>
-	LocasberosEnabled <%= enabled %>
-	CasEndpoint <%= endpoint %>
-	CasService <%= cas_service %>
-	AuthType <%= auth_type %>
-	Require <%= require_type %>
+	<%= display_key "LocasberosEnabled", enabled %>
+	<%= display_key "CasEndpoint", endpoint %>
+	<%= display_key "CasService", cas_service %>
+	<%= display_key "AuthType", auth_type %>
+	<%= display_key "AuthName", auth_name %>
+	<%= display_key "AuthUserFile", auth_user_file %>
+	<%= display_key "Require", require_type %>
 </Location>

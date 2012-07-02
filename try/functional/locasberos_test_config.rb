@@ -1,7 +1,8 @@
 class LocasberosTestConfig
   attr_accessor :listen_host, :listen_port, :root,
                 :xdir, :page, :enabled, :endpoint,
-                :cas_service, :auth_type, :require_type
+                :cas_service, :require_type,
+                :auth_type, :auth_name, :auth_user_file
 
   def initialize
     @root         = File.expand_path(File.dirname(__FILE__) + "/../../dist")
@@ -26,6 +27,10 @@ class LocasberosTestConfig
 
   def template
     ERB.new(File.read base_file).result(get_binding)
+  end
+
+  def display_key(key, value)
+    value ? "#{key} #{value}" : ""
   end
 
   # class binding to use on ERB
