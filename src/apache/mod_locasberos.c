@@ -175,7 +175,7 @@ int __locasberos_authenticate(request_rec *r) {
   }
 
   if (! cfg->enabled) {
-    ML_LOGDEBUG(r->server, "CASEnabled off, declining: %s", r->uri);
+    ML_LOGDEBUG(r->server, "LocasberosEnabled off, declining: %s", r->uri);
     return(DECLINED);
   }
 
