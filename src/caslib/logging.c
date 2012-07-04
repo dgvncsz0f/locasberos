@@ -84,6 +84,7 @@ void __error(void *_, const char *file, int line, const char *fmt, ...) {
 logger_t default_logger = { __debug,
                             __info,
                             __warn,
-                            __error
+                            __error,
+                            NULL
                           };
 
