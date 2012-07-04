@@ -9,9 +9,15 @@
 
   * [ ] Acceptance tests using real CAS server
 
+  * [ ] Refactor apache/nginx tests:
+
+    * [ ] Identify tests specifics to each module
+
+    * [ ] Use DSL to configure webservers;
+
   * [-] Implement locasberos authentication function
     * [X] use caslib to validate service ticket
-    * [ ] CASService: defines reasonable default
+    * [X] CASService: defines reasonable default
     * [ ] /login redirect
     * [ ] emit cookie whenever authentication succeeds
     * [ ] validate cookie
