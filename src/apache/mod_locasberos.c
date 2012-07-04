@@ -28,19 +28,20 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
 #include <ctype.h>
 #include <stdbool.h>
 
+#include "ap_config.h"
 #include "httpd.h"
 #include "http_config.h"
 #include "http_request.h"
+#include "http_protocol.h"
 #include "http_core.h"
 #include "http_log.h"
+
 #include "apr_general.h"
-#include "apr_uri.h"
 #include "apr_strings.h"
-#include "apr_tables.h"
+#include "apr_pools.h"
 #include "apr_hash.h"
 #include "apr_lib.h"
 
@@ -109,13 +110,14 @@ void *__locasberos_cfg_new_dir(apr_pool_t *pool, char *d) {
 }
 
 static
-apr_hash_t *__parse_query_string(apr_pool_t *pool, char *args) {
-    apr_hash_t *query          = apr_hash_make(pool);
-    CASLIB_GOTOIF(args==NULL, terminate);
-    apr_array_header_t *values = NULL;
-    char *val                  = NULL;
-    char *ctx                  = NULL;
-    char *token                = apr_strtok(args, "&", &ctx);
+apr_hash_t *__parse_query_string(apr_pool_t *pool, const char *args0) {
+    apr_hash_t *query = apr_hash_make(pool);
+    CASLIB_GOTOIF(args0==NULL, terminate);
+
+    char *args  = apr_pstrdup(pool, args0);
+    char *val   = NULL;
+    char *ctx   = NULL;
+    char *token = apr_strtok(args, "&", &ctx);
 
     for (; token!=NULL; token=apr_strtok(NULL, "&", &ctx)) {
       val   = strchr(token, '=');
@@ -137,12 +139,25 @@ apr_hash_t *__parse_query_string(apr_pool_t *pool, char *args) {
 }
 
 static
+char *__request_uri(request_rec *r) {
+  return(apr_pstrcat(r->pool,
+                     ap_http_scheme(r),
+                     "://",
+                     r->server->server_hostname,
+                     apr_psprintf(r->pool, ":%u", r->server->port),
+                     r->uri,
+                     (r->args != NULL ? "?" : ""),
+                     r->args,
+                     NULL));
+}
+
+static
 int __locasberos_authenticate(request_rec *r) {
   mod_locasberos_t *cfg = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
   const char *auth_type = ap_auth_type(r);
   apr_hash_t *args      = (r->args==NULL ? NULL : __parse_query_string(r->pool, r->args));
   const char *ticket    = (args==NULL ? NULL : apr_hash_get(args, "ticket", APR_HASH_KEY_STRING));
-  const char *service   = cfg->cas_service;
+  const char *service   = ML_GET_PTRVAL(cfg->cas_service, __request_uri(r));
   caslib_t *cas         = NULL;
   caslib_rsp_t *rsp     = NULL;
   logger_t logger;
@@ -152,6 +167,7 @@ int __locasberos_authenticate(request_rec *r) {
   logger.info_f  = __caslib_logger_func;
   logger.warn_f  = __caslib_logger_func;
   logger.error_f = __caslib_logger_func;
+  logger.data    = r->server;
 
   if (auth_type==NULL || apr_strnatcasecmp(auth_type, "locasberos")) {
     ML_LOGDEBUG(r->server, "ap_auth_type is not set to locasberos, declining: %s", r->uri);
@@ -159,17 +175,12 @@ int __locasberos_authenticate(request_rec *r) {
   }
 
   if (! cfg->enabled) {
-    ML_LOGDEBUG(r->server, "cas_enabled set to Off, declining: %s", r->uri);
+    ML_LOGDEBUG(r->server, "CASEnabled off, declining: %s", r->uri);
     return(DECLINED);
   }
 
-  if (cfg->cas_service == NULL) {
-    ML_LOGERROR(r->server, "need CASService: %s", r->uri);
-    return(HTTP_INTERNAL_SERVER_ERROR);
-  }
-
   if (cfg->cas_endpoint == NULL) {
-    ML_LOGERROR(r->server, "need CASEndpoint: %s", r->uri);
+    ML_LOGERROR(r->server, "CASEndpoint missing: %s", r->uri);
     return(HTTP_INTERNAL_SERVER_ERROR);
   }
 

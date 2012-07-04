@@ -34,12 +34,12 @@ require "spec_helper"
 
 describe :casservice_flag do
   WEBSERVERS.each do |webserver|
-    it "should reply 500 when missing" do
+    it "should reply 403 when missing (uses current uri)" do
       config = webserver.new
       config.cas_service = nil
       config.run do
         response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=FOO"))
-        response.code.should == 500
+        response.code.should == 403
       end
     end
   end
