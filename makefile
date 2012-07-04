@@ -1,8 +1,8 @@
 
 export root            = $(CURDIR)/dist
-export cfg_srcroot     = $(CURDIR)
-export cfg_srcdir      = $(cfg_srcroot)/src
-export cfg_trydir      = $(cfg_srcroot)/try
+export cfg_rootdir     = $(CURDIR)
+export cfg_srcdir      = $(cfg_rootdir)/src
+export cfg_trydir      = $(cfg_rootdir)/try
 export nginx_srcdir    = $(CURDIR)/../nginx-1.2.1
 export apxs_libexecdir = $(shell $(APXS) -q LIBEXECDIR)
 export CCFLAGS         =
