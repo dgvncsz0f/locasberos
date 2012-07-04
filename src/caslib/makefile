@@ -5,13 +5,13 @@ LNK_NAME  = libcaslib
 include $(cfg_srcdir)/makefile.rules
 
 .PHONY: compile
-compile: CFLAGS += -W -Wall -pedantic -std=c99 -I/usr/include/libxml2
+compile: CFLAGS += -Wall -Wextra -Wwrite-strings -Wconversion -Werror -pedantic -std=c99 -I/usr/include/libxml2
 compile: $(O_OBJ_FILES) $(G_OBJ_FILES)
 
 .PHONY: link
 link: LD       = gcc
 link: LDFLAGS += -lcurl -lxml2
-link: CFLAGS  += -W -Wall -pedantic -std=c99 -I/usr/include/libxml2
+link: CFLAGS  += -Wall -Wextra -Wwrite-strings -Wconversion -Werror -pedantic -std=c99 -I/usr/include/libxml2
 link: $(O_LNK_FILE) $(G_LNK_FILE)
 
 .PHONY:

@@ -91,7 +91,7 @@ size_t __write_cc(void *payload, size_t usize, size_t nmemb, void *arg) {
   xmlParserCtxtPtr ctxt = (xmlParserCtxtPtr) arg;
 
   size_t size = usize * nmemb;
-  int rc      = xmlParseChunk(ctxt, payload, size, 0);
+  int rc      = xmlParseChunk(ctxt, payload, (int) size, 0);
 
   return(rc==0 ? size : 0);
 }
@@ -108,14 +108,14 @@ void __curl_set_common_opt(const caslib_t *cas, CURL *curl) {
 
 static
 int __joinparams(const caslib_t *cas, char *dest, size_t sz, int argv, ...) {
-  int rc       = sz,
+  int rc       = (int) sz,
       k        = 0;
   char *fmtstr = NULL;
   va_list args;
 
   va_start(args, argv);
   if (dest != NULL) {
-    fmtstr = CASLIB_ALLOC_F(cas->alloca, 3*argv);
+    fmtstr = CASLIB_ALLOC_F(cas->alloca, (size_t) (3*argv));
     for (k=0; k<argv; k+=1) {
       if (k == 0)
         strncpy(fmtstr, "%s", 2);
@@ -127,7 +127,7 @@ int __joinparams(const caslib_t *cas, char *dest, size_t sz, int argv, ...) {
   } else {
     rc = argv;
     for (k=0; k<argv; k+=1)
-      rc += strlen(va_arg(args, char *));
+      rc += (int) strlen(va_arg(args, char *));
   }
   va_end(args);
 
@@ -141,14 +141,14 @@ int __uencode(CURL *curl, char *dest, size_t sz, const char *key, const char *va
   char *e_val = NULL;
   int rc      = -1;
 
-  e_key = curl_easy_escape(curl, key, 0);
-  e_val = curl_easy_escape(curl, val, 0);
-  CASLIB_GOTOIF(e_key==NULL || e_val==NULL, release);
   if (dest != NULL) {
+    e_key = curl_easy_escape(curl, key, 0);
+    e_val = curl_easy_escape(curl, val, 0);
+    CASLIB_GOTOIF(e_key==NULL || e_val==NULL, release);
     snprintf(dest, sz, "%s=%s", e_key, e_val);
-    rc = strlen(dest);
+    rc = (int) strlen(dest);
   } else {
-    rc = 2 + strlen(e_key) + strlen(e_val);
+    rc = (int) (2 + strlen(e_key) + strlen(e_val));
   }
 
  release:
@@ -159,12 +159,15 @@ int __uencode(CURL *curl, char *dest, size_t sz, const char *key, const char *va
 
 static
 char *__uencode_r(const caslib_t *cas, CURL *curl, const char *key, const char *val) {
-  int rc;
-  size_t sz   = __uencode(curl, NULL, 0, key, val);
+  int rc      = -1;
   char *param = NULL;
+  int sz      = __uencode(curl, NULL, 0, key, val);
 
-  param = CASLIB_ALLOC_F(cas->alloca, sz);
-  rc    = __uencode(curl, param, sz, key, val);
+  if (sz != -1) {
+    param = CASLIB_ALLOC_F(cas->alloca, (size_t) sz);
+    rc    = __uencode(curl, param, (size_t) sz, key, val);
+  }
+
   if (rc == -1) {
     CASLIB_DESTROY_F(cas->alloca, param);
     param = NULL;
@@ -264,9 +267,9 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   erenew   = __uencode_r(cas, curl, "renew", (renew ? "true" : "false"));
   rc       = __joinparams(cas, NULL, 0, 3, eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
-  reqbdy   = CASLIB_ALLOC_F(cas->alloca, rc);
+  reqbdy   = CASLIB_ALLOC_F(cas->alloca, (size_t) rc);
   CASLIB_GOTOIF(reqbdy==NULL, failure);
-  rc       = __joinparams(cas, reqbdy, rc, 3, eservice, eticket, erenew);
+  rc       = __joinparams(cas, reqbdy, (size_t) rc, 3, eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
   CASLIB_DEBUG(cas->logger, " along with the post fields: %s", reqbdy);
 
