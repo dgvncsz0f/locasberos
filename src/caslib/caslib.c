@@ -141,10 +141,11 @@ int __uencode(CURL *curl, char *dest, size_t sz, const char *key, const char *va
   char *e_val = NULL;
   int rc      = -1;
 
+  e_key = curl_easy_escape(curl, key, 0);
+  e_val = curl_easy_escape(curl, val, 0);
+  CASLIB_GOTOIF(e_key==NULL || e_val==NULL, release);
+
   if (dest != NULL) {
-    e_key = curl_easy_escape(curl, key, 0);
-    e_val = curl_easy_escape(curl, val, 0);
-    CASLIB_GOTOIF(e_key==NULL || e_val==NULL, release);
     snprintf(dest, sz, "%s=%s", e_key, e_val);
     rc = (int) strlen(dest);
   } else {
