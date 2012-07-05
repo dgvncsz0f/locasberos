@@ -153,6 +153,9 @@ char *__request_uri(request_rec *r) {
 
 static
 int __locasberos_authenticate(request_rec *r) {
+  if (! ap_is_initial_req(r))
+    return(DECLINED);
+
   mod_locasberos_t *cfg = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
   const char *auth_type = ap_auth_type(r);
   apr_hash_t *args      = (r->args==NULL ? NULL : __parse_query_string(r->pool, r->args));
