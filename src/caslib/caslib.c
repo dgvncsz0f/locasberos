@@ -177,6 +177,20 @@ char *__uencode_r(const caslib_t *cas, CURL *curl, const char *key, const char *
   return(param);
 }
 
+static
+xmlNodePtr __select_node(const xmlNodePtr root, const char *name) {
+  xmlNodePtr node = root->children;
+  while (node != NULL && (node = node->next)) {
+    if (node->type != XML_ELEMENT_NODE
+        || node->ns == NULL
+        || xmlStrcmp(node->ns->href, (xmlChar *) "http://www.yale.edu/tp/cas") != 0)
+      continue;
+    if (xmlStrcmp(node->name, (const xmlChar *) name) == 0)
+      return(node);
+  }
+  return(NULL);
+}
+
 int caslib_global_init() {
   xmlInitParser();
   return(curl_global_init(CURL_GLOBAL_ALL));
@@ -341,19 +355,37 @@ int caslib_rsp_auth(const caslib_rsp_t *p) {
   if (p->xml == NULL)
     return(-1);
 
-  xmlNodePtr node = xmlDocGetRootElement(p->xml)->children;
-  while (node != NULL && (node = node->next)) {
-    if (node->type != XML_ELEMENT_NODE
-        || node->ns == NULL
-        || xmlStrcmp(node->ns->href, (xmlChar *) "http://www.yale.edu/tp/cas") != 0)
-      continue;
-    if (xmlStrcmp(node->name, (xmlChar *) "authenticationFailure") == 0)
-      return(1);
-    if (xmlStrcmp(node->name, (xmlChar *) "authenticationSuccess") == 0)
-      return(0);
-  }
+  xmlNodePtr failure = __select_node(xmlDocGetRootElement(p->xml), "authenticationFailure");
+  xmlNodePtr success = __select_node(xmlDocGetRootElement(p->xml), "authenticationSuccess");
+  if (failure != NULL)
+    return(1);
+  else if (success != NULL)
+    return(0);
+  else
+    return(-1);
 
   return(-1);
+}
+
+int caslib_rsp_auth_username(const caslib_rsp_t *p, char *u, size_t s) {
+  xmlNodePtr success  = __select_node(xmlDocGetRootElement(p->xml), "authenticationSuccess");
+  xmlNodePtr username = (success!=NULL ? __select_node(success, "user") : NULL);
+  xmlChar *s_username = (username!=NULL ? xmlNodeGetContent(username) : NULL);
+  size_t tmp          = 0;
+  int rc              = -1;
+
+  if (s_username != NULL) {
+    tmp = strlen((char *) s_username) + 1;
+    if (u != NULL) {
+      tmp = (s<tmp ? s : tmp);
+      memcpy(u, s_username, tmp-1);
+      u[tmp-1] = '\0';
+    }
+    rc = (int) tmp;
+  }
+
+  xmlFree(s_username);
+  return(rc);
 }
 
 bool caslib_rsp_auth_success(const caslib_rsp_t *p) {

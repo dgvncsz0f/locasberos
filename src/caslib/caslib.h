@@ -121,6 +121,18 @@ int caslib_rsp_auth(const caslib_rsp_t *);
  */
 bool caslib_rsp_auth_success(const caslib_rsp_t *);
 
+/*! Returns the username associated with a auth response. Obviously
+ *  this is only available if you have an authentication success
+ *  message.
+ *
+ *  \param u The variable to receive the username (might be null);
+ *
+ *  \param s The size of the u variable;
+ *
+ *  \return The s parameter or the minimum required size of u.
+ */
+int caslib_rsp_auth_username(const caslib_rsp_t *, char *u, size_t s);
+
 /*! Free memory used by a given caslib_t structure. This is the
  *  dual function of caslib_init.
  */

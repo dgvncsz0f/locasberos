@@ -78,6 +78,41 @@ TEST(caslib_service_validate_should_not_return_NULL_for_auth_success_responses) 
   caslib_destroy(cas);
 }
 
+TEST(caslib_rsp_auth_username_must_return_the_username_for_auth_success_responses) {
+  char buffer[9];
+  std::string url   = "file://" + fixture_path("/auth_success");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(9, caslib_rsp_auth_username(rsp, buffer, 9));
+  CHECK_EQUAL(9, caslib_rsp_auth_username(rsp, NULL, 0));
+  CHECK_EQUAL("username", buffer);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_rsp_auth_username_must_return_minus_one_for_auth_success_responses) {
+  char buffer[9];
+  std::string url   = "file://" + fixture_path("/auth_failure");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(-1, caslib_rsp_auth_username(rsp, NULL, 0));
+  CHECK_EQUAL(-1, caslib_rsp_auth_username(rsp, buffer, 9));
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(caslib_rsp_auth_username_must_return_the_strlen_for_auth_success_responses) {
+  char buffer[9];
+  std::string url   = "file://" + fixture_path("/auth_success");
+  caslib_t *cas     = caslib_init(url.c_str());
+  caslib_rsp_t *rsp = caslib_service_validate(cas, "service", "ticket", false);
+  CHECK_EQUAL(5, caslib_rsp_auth_username(rsp, buffer, 5));
+  CHECK_EQUAL(9, caslib_rsp_auth_username(rsp, NULL, 0));
+  CHECK_EQUAL("user", buffer);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
 TEST(caslib_service_validate_should_not_return_NULL_for_auth_failure_responses) {
   std::string url   = "file://" + fixture_path("/auth_failure");
   caslib_t *cas     = caslib_init(url.c_str());
