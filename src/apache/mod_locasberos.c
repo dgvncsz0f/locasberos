@@ -165,6 +165,7 @@ int __locasberos_authenticate(request_rec *r) {
   caslib_rsp_t *rsp     = NULL;
   logger_t logger;
   int status            = DECLINED;
+  int usersz            = -1;
 
   logger.debug_f = __caslib_logger_func;
   logger.info_f  = __caslib_logger_func;
@@ -200,8 +201,11 @@ int __locasberos_authenticate(request_rec *r) {
     ML_LOGDEBUG(r->server, "cas authentication failure: %s", r->uri);
     status = HTTP_FORBIDDEN;
   } else {
-    ML_LOGDEBUG(r->server, "cas authentication success: %s", r->uri);
     status  = OK;
+    usersz  = caslib_rsp_auth_username(rsp, NULL, 0);
+    r->user = apr_palloc(r->pool, usersz);
+    caslib_rsp_auth_username(rsp, r->user, usersz);
+    ML_LOGDEBUG(r->server, "cas authentication success: user=%s, %s", r->user, r->uri);
   }
 
   if (cas != NULL)
