@@ -29,8 +29,8 @@ class Locasberos
     ERB.new(File.read base_file).result(get_binding)
   end
 
-  def display_key(key, value)
-    value ? "#{key} #{value}" : ""
+  def display_key(key, value, endline = "")
+    value ? "#{key} #{value}#{endline}" : ""
   end
 
   # class binding to use on ERB
