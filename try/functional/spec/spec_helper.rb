@@ -58,7 +58,7 @@ def cat(f)
 end
 
 def clean(server_root)
-  #FileUtils.rm_rf(server_root)
+  FileUtils.rm_rf(server_root)
 end
 
 class AuthBasicHTTP
