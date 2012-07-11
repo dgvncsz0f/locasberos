@@ -11,10 +11,10 @@ export LDFLAGS         =
 export LIBTOOLFLAGS    = --silent
 export APXSFLAGS       =
 
-export APXS          = $(shell if which apxs >/dev/null; then echo apxs; else echo apxs2; fi)
-export CC            = gcc
-export CXX           = g++
-export LIBTOOL       = libtool
+export APXS            = $(foreach apxs, /usr/bin/apxs /usr/sbin/apxs /usr/bin/apxs2 /usr/sbin/apxs2, $(shell [ -x "$(apxs)" ] && echo "$(apxs)"))
+export CC              = gcc
+export CXX             = g++
+export LIBTOOL         = libtool
 
 compile-caslib:
 	@$(MAKE) -C $(cfg_srcdir)/caslib compile
