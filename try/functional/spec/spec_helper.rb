@@ -50,7 +50,7 @@ $bin_apxs    = find_x("/usr/sbin/apxs",  "/usr/bin/apxs", "/usr/sbin/apxs2", "/u
 $bin_httpd   = find_x("/usr/sbin/httpd", "/usr/bin/httpd", "/usr/sbin/apache2", "/usr/bin/apache2")
 
 WEBSERVERS = [
-  Apache , Nginx
+  Apache #, Nginx
 ]
 
 def cat(f)
