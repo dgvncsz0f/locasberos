@@ -32,35 +32,52 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+typedef struct {
+  ngx_flag_t cas_enabled;
+  ngx_flag_t locasberos_enabled;
+} ngx_http_locasberos_loc_conf_t;
+
 static ngx_command_t locasberos_cmds[] = {
-    {
-      ngx_string("cas_enabled"),
-      NGX_CONF_TAKE1,
-      ngx_conf_set_flag_slot,
-      0,
-      0,
-      NULL
-    },
-    ngx_null_command
+  {
+    ngx_string("cas_enabled"),
+    NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
+    ngx_conf_set_flag_slot,
+    NGX_HTTP_LOC_CONF_OFFSET,
+    offsetof(ngx_http_locasberos_loc_conf_t, cas_enabled),
+    NULL
+  },
+  {
+    ngx_string("locasberos_enabled"),
+    NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
+    ngx_conf_set_flag_slot,
+    NGX_HTTP_LOC_CONF_OFFSET,
+    offsetof(ngx_http_locasberos_loc_conf_t, locasberos_enabled),
+    NULL
+  },
+  ngx_null_command
+};
+
+static ngx_int_t ngx_http_locasberos_init(ngx_conf_t *conf) {
+  return NGX_OK;
 };
 
 static ngx_http_module_t locasberos_ctx = {
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+  NULL,
+  ngx_http_locasberos_init,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL
 };
 
 ngx_module_t mod_locasberos = {
-    NGX_MODULE_V1,
-    &locasberos_ctx,
-    locasberos_cmds,
-    NGX_HTTP_MODULE,
-    NULL, NULL, NULL, NULL, /* inits */
-    NULL, NULL, NULL,  /* exits */
-    NGX_MODULE_V1_PADDING
+  NGX_MODULE_V1,
+  &locasberos_ctx,
+  locasberos_cmds,
+  NGX_HTTP_MODULE,
+  NULL, NULL, NULL, NULL, /* inits */
+  NULL, NULL, NULL,  /* exits */
+  NGX_MODULE_V1_PADDING
 };
