@@ -52,6 +52,22 @@ static ngx_int_t ngx_http_locasberos_init(ngx_conf_t *conf) {
   return NGX_OK;
 };
 
+static void * ngx_http_locasberos_create_loc_conf(ngx_conf_t *cf) {
+  ngx_http_locasberos_loc_conf_t *conf;
+  conf = ngx_palloc(cf->pool, sizeof(ngx_http_locasberos_loc_conf_t));
+  if (conf == NULL) {
+    return NGX_CONF_ERROR;
+  }
+
+  conf->locasberos_enabled = NGX_CONF_UNSET;
+
+  return conf;
+};
+
+static char * ngx_http_locasberos_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child) {
+  return NGX_CONF_OK;
+};
+
 static ngx_http_module_t locasberos_ctx = {
   NULL,
   ngx_http_locasberos_init,
@@ -59,8 +75,8 @@ static ngx_http_module_t locasberos_ctx = {
   NULL,
   NULL,
   NULL,
-  NULL,
-  NULL
+  ngx_http_locasberos_create_loc_conf,
+  ngx_http_locasberos_merge_loc_conf
 };
 
 ngx_module_t mod_locasberos = {
