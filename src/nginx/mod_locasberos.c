@@ -33,19 +33,10 @@
 #include <ngx_http.h>
 
 typedef struct {
-  ngx_flag_t cas_enabled;
   ngx_flag_t locasberos_enabled;
 } ngx_http_locasberos_loc_conf_t;
 
 static ngx_command_t locasberos_cmds[] = {
-  {
-    ngx_string("cas_enabled"),
-    NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
-    ngx_conf_set_flag_slot,
-    NGX_HTTP_LOC_CONF_OFFSET,
-    offsetof(ngx_http_locasberos_loc_conf_t, cas_enabled),
-    NULL
-  },
   {
     ngx_string("locasberos_enabled"),
     NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
