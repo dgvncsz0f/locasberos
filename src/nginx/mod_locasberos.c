@@ -34,6 +34,8 @@
 
 typedef struct {
   ngx_flag_t locasberos_enabled;
+  ngx_str_t cas_endpoint;
+  ngx_str_t cas_service;
 } ngx_http_locasberos_loc_conf_t;
 
 static ngx_command_t locasberos_cmds[] = {
@@ -45,11 +47,27 @@ static ngx_command_t locasberos_cmds[] = {
     offsetof(ngx_http_locasberos_loc_conf_t, locasberos_enabled),
     NULL
   },
+  {
+    ngx_string("cas_endpoint"),
+    NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
+    ngx_conf_set_str_slot,
+    NGX_HTTP_LOC_CONF_OFFSET,
+    offsetof(ngx_http_locasberos_loc_conf_t, cas_endpoint),
+    NULL
+  },
+  {
+    ngx_string("cas_service"),
+    NGX_HTTP_MAIN_CONF | NGX_HTTP_SRV_CONF | NGX_HTTP_LOC_CONF | NGX_HTTP_LMT_CONF | NGX_CONF_TAKE1,
+    ngx_conf_set_str_slot,
+    NGX_HTTP_LOC_CONF_OFFSET,
+    offsetof(ngx_http_locasberos_loc_conf_t, cas_service),
+    NULL
+  },
   ngx_null_command
 };
 
 static ngx_int_t ngx_http_locasberos_init(ngx_conf_t *conf) {
-  return NGX_OK;
+  return NGX_DECLINED;
 };
 
 static void * ngx_http_locasberos_create_loc_conf(ngx_conf_t *cf) {
@@ -59,6 +77,8 @@ static void * ngx_http_locasberos_create_loc_conf(ngx_conf_t *cf) {
     return NGX_CONF_ERROR;
   }
 
+  ngx_str_null(&conf->cas_endpoint);
+  ngx_str_null(&conf->cas_service);
   conf->locasberos_enabled = NGX_CONF_UNSET;
 
   return conf;

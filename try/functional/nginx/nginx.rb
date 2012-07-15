@@ -17,9 +17,6 @@ class Nginx < Locasberos
       ensure
         nginx_stop(root)
       end
-    rescue
-      puts "\n> exceptiong caught..."
-      raise
     ensure
       clean(root)
     end
