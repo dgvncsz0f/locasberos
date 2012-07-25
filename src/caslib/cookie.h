@@ -50,17 +50,15 @@ typedef struct caslib_cookie_t caslib_cookie_t;
 caslib_cookie_t *cookie_init(const caslib_t *, const caslib_rsp_t *r);
 
 /*! Unserializes the cookie that has been written by the
- *  cookie_serialize_http function. It is also possible to use this
- *  function to unserialize the Cookie http header.
+ *  cookie_serialize function.
  * 
  * \param s The cookie string.
  *
  * \return The cookie struct or NULL if something goes wrong.
  */
-caslib_cookie_t *cookie_unserialize_http(const caslib_t *, const char *s);
+caslib_cookie_t *cookie_unserialize(const caslib_t *, const char *s);
 
-/*! Serializes the cookie in a format suitable for the Set-Cookie of
- *  the HTTP protocol.
+/*! Serializes the cookie in a 7-bit ascii format.
  *
  *  \param u The cookie you want to serialize.
  *
@@ -70,7 +68,7 @@ caslib_cookie_t *cookie_unserialize_http(const caslib_t *, const char *s);
  *
  *  \return The s parameter or the minimum required size of o.
  */
-int cookie_serialize_http(caslib_cookie_t *c, char *o, size_t s);
+int cookie_serialize(caslib_cookie_t *c, char *o, size_t s);
 
 /*! Frees all memory associated with the cookie structure.
  */
