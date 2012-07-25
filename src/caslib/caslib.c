@@ -391,3 +391,15 @@ int caslib_rsp_auth_username(const caslib_rsp_t *p, char *u, size_t s) {
 bool caslib_rsp_auth_success(const caslib_rsp_t *p) {
   return(caslib_rsp_auth(p) == 0);
 }
+
+void *caslib_alloca_alloc(const caslib_t *cas, size_t s) {
+  return(CASLIB_ALLOC_F(cas->alloca, s));
+}
+
+void *caslib_alloca_realloc(const caslib_t *cas, void *ptr, size_t s) {
+  return(CASLIB_REALLOC_F(cas->alloca, ptr, s));
+}
+
+void caslib_alloca_destroy(const caslib_t *cas, void *ptr) {
+  CASLIB_DESTROY_F(cas->alloca, ptr);
+}
