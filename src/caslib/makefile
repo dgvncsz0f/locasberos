@@ -11,7 +11,6 @@ compile: $(O_OBJ_FILES) $(G_OBJ_FILES)
 .PHONY: link
 link: LD       = gcc
 link: LDFLAGS += -lcurl -lxml2
-link: CFLAGS  += -Wall -Wextra -Wwrite-strings -Wconversion -Werror -pedantic -std=c99
 link: $(O_LNK_FILE) $(G_LNK_FILE)
 
 .PHONY:

@@ -5,7 +5,7 @@ LNK_NAME  = try_caslib
 include $(cfg_srcdir)/makefile.rules
 
 .PHONY: compile
-compile: CXXFLAGS += -W -Wall -pedantic -I$(cfg_srcdir) -I$(cfg_trydir) -I/usr/include/unittest++
+compile: CXXFLAGS += -Wall -Wextra -Wwrite-strings -Wconversion -Werror -pedantic -std=c++0x -I$(cfg_srcdir) -I$(cfg_trydir) -I/usr/include/unittest++
 compile: $(G_OBJ_FILES)
 
 .PHONY: link
