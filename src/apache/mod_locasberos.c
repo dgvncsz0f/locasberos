@@ -55,14 +55,14 @@
 #define ML_GET_PTRVAL(v, d) (v==NULL ? d : v)
 #define ML_GET_INTVAL(v, d) (v==-1 ? d : v)
 
-#define ML_LOGDEBUG_(s, fmt) ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, fmt)
-#define ML_LOGDEBUG(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, fmt, __VA_ARGS__)
-#define ML_LOGINFO_(s, fmt) ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, fmt)
-#define ML_LOGINFO(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, fmt, __VA_ARGS__)
-#define ML_LOGWARN_(s, fmt) ap_log_error(APLOG_MARK, APLOG_WARNING, 0, s, fmt)
-#define ML_LOGWARN(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_WARNING, 0, s, fmt, __VA_ARGS__)
-#define ML_LOGERROR_(s, fmt) ap_log_error(APLOG_MARK, APLOG_ERR, 0, s, fmt)
-#define ML_LOGERROR(s, fmt, ...) ap_log_error(APLOG_MARK, APLOG_ERR, 0, s, fmt, __VA_ARGS__)
+#define ML_LOGDEBUG_(s, fmt) ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, s, fmt)
+#define ML_LOGDEBUG(s, fmt, ...) ap_log_rerror(APLOG_MARK, APLOG_DEBUG, 0, s, fmt, __VA_ARGS__)
+#define ML_LOGINFO_(s, fmt) ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, s, fmt)
+#define ML_LOGINFO(s, fmt, ...) ap_log_rerror(APLOG_MARK, APLOG_INFO, 0, s, fmt, __VA_ARGS__)
+#define ML_LOGWARN_(s, fmt) ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, s, fmt)
+#define ML_LOGWARN(s, fmt, ...) ap_log_rerror(APLOG_MARK, APLOG_WARNING, 0, s, fmt, __VA_ARGS__)
+#define ML_LOGERROR_(s, fmt) ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, s, fmt)
+#define ML_LOGERROR(s, fmt, ...) ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, s, fmt, __VA_ARGS__)
 
 typedef struct {
   int enabled;
@@ -84,7 +84,7 @@ void __caslib_logger_func(void *data, const char *file, int line, const char *fm
   va_start(args, fmt);
   vsnprintf(msg, LOCASBEROS_MAXLOGSZ, fmt, args);
   va_end(args);
-  ML_LOGDEBUG_((server_rec *) data, msg);
+  ML_LOGDEBUG_((request_rec *) data, msg);
 }
 
 static inline
@@ -106,6 +106,15 @@ void *__locasberos_cfg_new_dir(apr_pool_t *pool, char *d) {
   mod_locasberos_t *cfg = apr_palloc(pool, sizeof(mod_locasberos_t));
   if (cfg != NULL)
     __locasberos_init_cfg(cfg);
+  return(cfg);
+}
+
+static
+void *__locasberos_cfg_merge_dir(apr_pool_t *pool, void *base_raw, void *add_raw) {
+  mod_locasberos_t *base  = (mod_locasberos_t *) base_raw;
+  mod_locasberos_t *add   = (mod_locasberos_t *) add_raw;
+  mod_locasberos_t *merge = (mod_locasberos_t *) apr_palloc(pool, sizeof(mod_locasberos_t));
+  
   return(cfg);
 }
 
@@ -171,20 +180,20 @@ int __locasberos_authenticate(request_rec *r) {
   logger.info_f  = __caslib_logger_func;
   logger.warn_f  = __caslib_logger_func;
   logger.error_f = __caslib_logger_func;
-  logger.data    = r->server;
+  logger.data    = r;
 
   if (auth_type==NULL || apr_strnatcasecmp(auth_type, "locasberos")) {
-    ML_LOGDEBUG(r->server, "ap_auth_type is not set to locasberos, declining: %s", r->uri);
+    ML_LOGDEBUG(r, "ap_auth_type is not set to locasberos, declining: %s", r->uri);
     return(DECLINED);
   }
 
   if (! cfg->enabled) {
-    ML_LOGDEBUG(r->server, "LocasberosEnabled off, declining: %s", r->uri);
+    ML_LOGDEBUG(r, "LocasberosEnabled off, declining: %s", r->uri);
     return(DECLINED);
   }
 
   if (cfg->cas_endpoint == NULL) {
-    ML_LOGERROR(r->server, "CASEndpoint missing: %s", r->uri);
+    ML_LOGERROR(r, "CASEndpoint missing: %s", r->uri);
     return(HTTP_INTERNAL_SERVER_ERROR);
   }
 
@@ -194,18 +203,18 @@ int __locasberos_authenticate(request_rec *r) {
     caslib_setopt_logging(cas, &logger);
     rsp = caslib_service_validate(cas, service, ticket, cfg->cas_renew);
   } else {
-    ML_LOGDEBUG(r->server, "no ticket found: %s", r->uri);
+    ML_LOGDEBUG(r, "no ticket found: %s", r->uri);
   }
 
   if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
-    ML_LOGDEBUG(r->server, "cas authentication failure: %s", r->uri);
+    ML_LOGDEBUG(r, "cas authentication failure: %s", r->uri);
     status = HTTP_FORBIDDEN;
   } else {
     status  = OK;
     usersz  = caslib_rsp_auth_username(rsp, NULL, 0);
     r->user = apr_palloc(r->pool, usersz);
     caslib_rsp_auth_username(rsp, r->user, usersz);
-    ML_LOGDEBUG(r->server, "cas authentication success: user=%s, %s", r->user, r->uri);
+    ML_LOGDEBUG(r, "cas authentication success: user=%s, %s", r->user, r->uri);
   }
 
   if (cas != NULL)
@@ -215,7 +224,7 @@ int __locasberos_authenticate(request_rec *r) {
   return(status);
 
  failure:
-  ML_LOGERROR(r->server, "internal server error, aborting: %s", r->uri);
+  ML_LOGERROR(r, "internal server error, aborting: %s", r->uri);
   return(HTTP_INTERNAL_SERVER_ERROR);
 }
 
