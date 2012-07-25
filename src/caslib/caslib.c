@@ -36,8 +36,8 @@
 #include <libxml/xmlstring.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
-#include "misc.h"
-#include "caslib.h"
+#include "caslib/misc.h"
+#include "caslib/caslib.h"
 
 struct caslib_t {
   char *endpoint;

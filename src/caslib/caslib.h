@@ -33,8 +33,8 @@
 
 #include <stdlib.h>
 #include <stdbool.h>
-#include "alloca.h"
-#include "logging.h"
+#include "caslib/alloca.h"
+#include "caslib/logging.h"
 
 typedef struct caslib_t caslib_t;
 typedef struct caslib_rsp_t caslib_rsp_t;

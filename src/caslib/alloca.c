@@ -29,8 +29,8 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdlib.h>
-#include "misc.h"
-#include "alloca.h"
+#include "caslib/misc.h"
+#include "caslib/alloca.h"
 
 void alloca_stdlib(alloca_t *ptr) {
   ptr->alloc_f   = malloc;

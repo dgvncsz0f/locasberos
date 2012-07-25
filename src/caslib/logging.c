@@ -31,8 +31,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
-#include "misc.h"
-#include "logging.h"
+#include "caslib/misc.h"
+#include "caslib/logging.h"
 
 static
 void __dolog(const char *file, int line, const char *fmt, va_list args) {
