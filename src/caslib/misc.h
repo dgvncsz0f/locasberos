@@ -34,4 +34,7 @@
 
 #define CASLIB_UNUSED(x) (void)(x)
 
+#define CASLIB_MAX(x,y) (x<y ? y : x);
+#define CASLIB_MIN(x,y) (x<y ? x : y);
+
 #endif

@@ -30,8 +30,13 @@
 #ifndef __LOCASBEROS_COOKIE__
 #define __LOCASBEROS_COOKIE__
 
+#include <inttypes.h>
 #include "caslib/alloca.h"
 #include "caslib/caslib.h"
+
+#ifndef COOKIE_USERNAME_MAXLEN
+#define COOKIE_USERNAME_MAXLEN 50
+#endif
 
 typedef struct caslib_cookie_t caslib_cookie_t;
 
@@ -43,7 +48,7 @@ typedef struct caslib_cookie_t caslib_cookie_t;
  *  than success.
  *
  * \param r A successful CAS response;
- * 
+ *
  * \return The cookie struct or NULL if something goes wrong.
  */
 caslib_cookie_t *cookie_init(const caslib_t *, const caslib_rsp_t *r);
@@ -53,9 +58,11 @@ caslib_cookie_t *cookie_init(const caslib_t *, const caslib_rsp_t *r);
  * 
  * \param s The cookie string.
  *
+ * \param sec The secret that has been used to sign the serialized string
+ *
  * \return The cookie struct or NULL if something goes wrong.
  */
-caslib_cookie_t *cookie_unserialize(const caslib_t *, const char *s);
+caslib_cookie_t *cookie_unserialize(const caslib_t *, const char *sec, const char *s);
 
 /*! Serializes the cookie in a 7-bit ascii format.
  *
@@ -63,11 +70,13 @@ caslib_cookie_t *cookie_unserialize(const caslib_t *, const char *s);
  *
  *  \param o The variable that will receive the cookie.
  *
+ *  \param sec The secret to sign the message. You will need this to unserialize it later.
+ *
  *  \param s The size of the o variable;
  *
  *  \return The s parameter or the minimum required size of o.
  */
-int cookie_serialize(caslib_cookie_t *c, char *o, size_t s);
+int cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s);
 
 /*! Frees all memory associated with the cookie structure.
  */

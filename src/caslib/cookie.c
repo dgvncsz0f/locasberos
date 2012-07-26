@@ -27,17 +27,62 @@
 // OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <assert.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <string.h>
 #include <sys/time.h>
 #include "caslib/misc.h"
 #include "caslib/cookie.h"
 
+#define COOKIE_VER 1
+
 struct caslib_cookie_t {
   char *username;
-  char *signature;
   uint64_t timestamp;
 };
+
+static inline
+int __serialize_uint8(uint8_t *out, int out_sz, uint8_t n) {
+  if (out_sz < 1)
+    return(-1);
+  out[0] = n;
+  return(out_sz - 1);
+}
+
+static inline
+int __serialize_uint16(uint8_t *out, int out_sz, uint16_t n) {
+  if (out_sz < 2)
+    return(-1);
+
+  out_sz = __serialize_uint8(out, out_sz, (uint8_t) (n & 0xFF));
+  out_sz = __serialize_uint8(out+1, out_sz, (uint8_t) ((n >> 8) & 0xFF));
+  return(out_sz);
+}
+
+static inline
+int __serialize_uint32(uint8_t *out, int out_sz, uint32_t n) {
+  out_sz = __serialize_uint16(out, out_sz, (uint16_t) (n & 0xFFFF));
+  out_sz = __serialize_uint16(out+2, out_sz, (uint16_t) ((n >> 16) & 0xFFFF));
+  return(out_sz);
+}
+
+static inline
+int __serialize_uint64(uint8_t *out, int out_sz, uint64_t n) {
+  out_sz = __serialize_uint32(out, out_sz, (uint32_t) (n & 0xFFFFFFFF));
+  out_sz = __serialize_uint32(out+4, out_sz, (uint32_t) ((n >> 32) & 0xFFFFFFFF));
+  return(out_sz);
+}
+
+static inline
+int __serialize_string(uint8_t *out, int out_sz, const char *s, uint16_t sz) {
+  int tmp = (2 + sz);
+  if (out_sz < tmp)
+    return(-1);
+  tmp = __serialize_uint16(out, out_sz, sz);
+  memcpy(out + 2, s, sz);
+  return(tmp - sz);
+}
 
 caslib_cookie_t *cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
   struct timeval tv;
@@ -48,7 +93,6 @@ caslib_cookie_t *cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
   size_t sz         = (size_t) caslib_rsp_auth_username(rsp, NULL, 0);
   cookie->username  = caslib_alloca_alloc(cas, sz);
   CASLIB_GOTOIF(cookie->username==NULL, failure);
-  cookie->signature = NULL; // TODO:fixme
   cookie->timestamp = (uint64_t) tv.tv_sec;
   caslib_rsp_auth_username(rsp, cookie->username, sz);
 
@@ -59,9 +103,33 @@ caslib_cookie_t *cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
   return(NULL);
 }
 
+int cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) {
+  CASLIB_UNUSED(sec);
+
+  char username[COOKIE_USERNAME_MAXLEN];
+  size_t ulen = strlen(c->username) + 1;
+  int usz     = CASLIB_MIN(COOKIE_USERNAME_MAXLEN - 1, (int) ulen);
+  int sz      = 1 + 2 + usz + 8;
+  int tmp;
+
+  if (s < (size_t) sz)
+    return(-1);
+  else if (o != NULL) {
+    strncpy(username, c->username, (size_t) (usz - 1));
+    username[usz] = '\0';
+    tmp = __serialize_uint8(o, (int) s, COOKIE_VER);              // + 1
+    tmp = __serialize_string(o+1, tmp, username, (uint16_t) usz); // + 2 + usz
+    tmp = __serialize_uint64(o+2+usz, tmp, c->timestamp);         // +8
+    tmp = ((int) s) - tmp;
+    assert(sz == tmp);
+    return(sz);
+  } else {
+    return(sz);
+  }
+}
+
 void cookie_destroy(const caslib_t *cas, caslib_cookie_t *cookie) {
   if (cookie != NULL) {
-    caslib_alloca_destroy(cas, cookie->signature);
     caslib_alloca_destroy(cas, cookie->username);
   }
   caslib_alloca_destroy(cas, cookie);
