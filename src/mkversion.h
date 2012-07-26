@@ -20,7 +20,6 @@ cat >src/caslib/version.h <<ENDL
 
 // Copyright (c) 2012 dgvncsz0f
 // Copyright (c) 2012 pothix
-// Copyright (c) 2012 morellon
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
