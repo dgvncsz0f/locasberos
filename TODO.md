@@ -23,6 +23,7 @@
     * [ ] validate cookie
     * [ ] inject cas information into the request (username, attributes etc.)
     * [ ] sanity check to avoid header injection
+    * [ ] cookie_serialize needs a portable binary format
 
   * [ ] Documentation
     * [ ] doxygen for caslib API
