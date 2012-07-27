@@ -83,7 +83,7 @@ int __serialize_string(uint8_t *out, int out_sz, const char *s, int sz) {
   return(out_sz - (sz+1));
 }
 
-caslib_cookie_t *cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
+caslib_cookie_t *caslib_cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
   struct timeval tv;
   gettimeofday(&tv, NULL);
   caslib_cookie_t *cookie = caslib_alloca_alloc(cas, sizeof(caslib_cookie_t));
@@ -102,7 +102,7 @@ caslib_cookie_t *cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
   return(NULL);
 }
 
-int cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) {
+int caslib_cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) {
   CASLIB_UNUSED(sec);
 
   char username[COOKIE_USR_MAXSZ];
@@ -127,7 +127,7 @@ int cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) 
   }
 }
 
-void cookie_destroy(const caslib_t *cas, caslib_cookie_t *cookie) {
+void caslib_cookie_destroy(const caslib_t *cas, caslib_cookie_t *cookie) {
   if (cookie != NULL) {
     caslib_alloca_destroy(cas, cookie->username);
   }

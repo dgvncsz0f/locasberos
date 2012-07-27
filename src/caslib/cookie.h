@@ -51,7 +51,7 @@ typedef struct caslib_cookie_t caslib_cookie_t;
  *
  * \return The cookie struct or NULL if something goes wrong.
  */
-caslib_cookie_t *cookie_init(const caslib_t *, const caslib_rsp_t *r);
+caslib_cookie_t *caslib_cookie_init(const caslib_t *, const caslib_rsp_t *r);
 
 /*! Unserializes the cookie that has been written by the
  *  cookie_serialize function.
@@ -62,7 +62,7 @@ caslib_cookie_t *cookie_init(const caslib_t *, const caslib_rsp_t *r);
  *
  * \return The cookie struct or NULL if something goes wrong.
  */
-caslib_cookie_t *cookie_unserialize(const caslib_t *, const char *sec, const char *s);
+caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *, const char *sec, const char *s);
 
 /*! Serializes the cookie in binary format.
  *
@@ -76,10 +76,10 @@ caslib_cookie_t *cookie_unserialize(const caslib_t *, const char *sec, const cha
  *
  *  \return The s parameter or the minimum required size of o.
  */
-int cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s);
+int caslib_cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s);
 
 /*! Frees all memory associated with the cookie structure.
  */
-void cookie_destroy(const caslib_t *, caslib_cookie_t *);
+void caslib_cookie_destroy(const caslib_t *, caslib_cookie_t *);
 
 #endif
