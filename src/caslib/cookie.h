@@ -64,7 +64,7 @@ caslib_cookie_t *cookie_init(const caslib_t *, const caslib_rsp_t *r);
  */
 caslib_cookie_t *cookie_unserialize(const caslib_t *, const char *sec, const char *s);
 
-/*! Serializes the cookie in a 7-bit ascii format.
+/*! Serializes the cookie in binary format.
  *
  *  \param u The cookie you want to serialize.
  *
