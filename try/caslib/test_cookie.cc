@@ -123,3 +123,21 @@ TEST(cookie_serialize_unserialize_should_be_noop) {
   caslib_rsp_destroy(cas, rsp);
   caslib_destroy(cas);
 }
+
+TEST(cookie_unserialize_should_fail_if_secret_is_different) {
+  caslib_t *cas            = caslib_init(test_cookie_cas_endpoint.c_str());
+  caslib_rsp_t *rsp        = __cas_response(cas);
+  caslib_cookie_t *cookie0 = caslib_cookie_init(cas, rsp);
+  caslib_cookie_t *cookie1 = NULL;
+  uint8_t data[1024];
+
+  caslib_cookie_serialize(cookie0, "secretA", data, 1024);
+  cookie1 = caslib_cookie_unserialize(cas, "secretO", data, 1024);
+
+  CHECK(NULL != cookie0);
+  CHECK(NULL == cookie1);
+
+  caslib_cookie_destroy(cas, cookie0);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
