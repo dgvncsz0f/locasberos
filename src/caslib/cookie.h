@@ -56,13 +56,16 @@ caslib_cookie_t *caslib_cookie_init(const caslib_t *, const caslib_rsp_t *r);
 /*! Unserializes the cookie that has been written by the
  *  cookie_serialize function.
  * 
- * \param s The cookie string.
- *
  * \param sec The secret that has been used to sign the serialized string
+ *
+ * \param s The cookie data.
  *
  * \return The cookie struct or NULL if something goes wrong.
  */
-caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *, const char *sec, const char *s);
+caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *, const char *sec, const uint8_t *s, size_t n);
+
+const char *caslib_cookie_username(const caslib_cookie_t *cookie);
+uint64_t caslib_cookie_timestamp(const caslib_cookie_t *cookie);
 
 /*! Serializes the cookie in binary format.
  *

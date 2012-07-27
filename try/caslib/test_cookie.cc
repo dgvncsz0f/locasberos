@@ -57,3 +57,22 @@ TEST(cookie_serialize_should_allow_NULL_pointers) {
   caslib_cookie_destroy(cas, cookie);
   caslib_destroy(cas);
 }
+
+TEST(cookie_serialize_unserialize_should_be_noop) {
+  caslib_t *cas            = caslib_init(test_cookie_cas_endpoint.c_str());
+  caslib_rsp_t *rsp        = __cas_response(cas);
+  caslib_cookie_t *cookie0 = caslib_cookie_init(cas, rsp);
+  caslib_cookie_t *cookie1 = NULL;
+  uint8_t data[1024];
+
+  caslib_cookie_serialize(cookie0, "secret", data, 1024);
+  cookie1 = caslib_cookie_unserialize(cas, "secret", data, 1024);
+
+  CHECK_EQUAL(caslib_cookie_timestamp(cookie0), caslib_cookie_timestamp(cookie1));
+  CHECK_EQUAL(caslib_cookie_username(cookie0), caslib_cookie_username(cookie1));
+
+  caslib_rsp_destroy(cas, rsp);
+  caslib_cookie_destroy(cas, cookie0);
+  caslib_cookie_destroy(cas, cookie1);
+  caslib_destroy(cas);
+}
