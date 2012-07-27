@@ -76,3 +76,18 @@ TEST(cookie_serialize_unserialize_should_be_noop) {
   caslib_cookie_destroy(cas, cookie1);
   caslib_destroy(cas);
 }
+
+TEST(cookie_serialize_should_fail_if_buffer_is_not_large_enough) {
+  caslib_t *cas           = caslib_init(test_cookie_cas_endpoint.c_str());
+  caslib_rsp_t *rsp       = __cas_response(cas);
+  caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
+  uint8_t data[1024];
+
+  int rc = caslib_cookie_serialize(cookie, "secret", NULL, 0);
+  rc = caslib_cookie_serialize(cookie, "secret", data, rc-1);
+  CHECK_EQUAL(-1, rc);
+
+  caslib_rsp_destroy(cas, rsp);
+  caslib_cookie_destroy(cas, cookie);
+  caslib_destroy(cas);
+}

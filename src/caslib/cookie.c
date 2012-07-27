@@ -240,9 +240,8 @@ int caslib_cookie_serialize(const caslib_cookie_t *c, const char *sec, uint8_t *
     tmp = ((int) s) - tmp;
     assert(sz == tmp);
     return(sz);
-  } else {
-    return(sz);
-  }
+  } else
+    return(-1);
 }
 
 void caslib_cookie_destroy(const caslib_t *cas, caslib_cookie_t *cookie) {
