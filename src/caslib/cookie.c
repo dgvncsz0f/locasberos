@@ -35,7 +35,7 @@
 #include "caslib/misc.h"
 #include "caslib/cookie.h"
 
-#define COOKIE_VER 1
+#define CASLIB_COOKIE_VER 1
 
 struct caslib_cookie_t {
   char *username;
@@ -105,9 +105,9 @@ caslib_cookie_t *cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
 int cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) {
   CASLIB_UNUSED(sec);
 
-  char username[COOKIE_USERNAME_MAXLEN];
+  char username[COOKIE_USR_MAXSZ];
   size_t ulen = strlen(c->username) + 1;
-  int usz     = CASLIB_MIN(COOKIE_USERNAME_MAXLEN - 1, (int) ulen);
+  int usz     = CASLIB_MIN(COOKIE_USR_MAXSZ - 1, (int) ulen);
   int sz      = 1 + 1 + usz + 8;
   int tmp;
 
@@ -116,9 +116,9 @@ int cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) 
   else if (o != NULL) {
     strncpy(username, c->username, (size_t) (usz - 1));
     username[usz] = '\0';
-    tmp = __serialize_uint8(o, (int) s, COOKIE_VER);       // + 1
-    tmp = __serialize_string(o+1, tmp, username, usz);     // + 1 + usz
-    tmp = __serialize_uint64(o+1+usz, tmp, c->timestamp);  // + 8
+    tmp = __serialize_uint8(o, (int) s, CASLIB_COOKIE_VER); // + 1
+    tmp = __serialize_string(o+1, tmp, username, usz);      // + 1 + usz
+    tmp = __serialize_uint64(o+1+usz, tmp, c->timestamp);   // + 8
     tmp = ((int) s) - tmp;
     assert(sz == tmp);
     return(sz);

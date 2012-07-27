@@ -34,8 +34,8 @@
 #include "caslib/alloca.h"
 #include "caslib/caslib.h"
 
-#ifndef COOKIE_USERNAME_MAXLEN
-#define COOKIE_USERNAME_MAXLEN 50
+#ifndef COOKIE_USR_MAXSZ
+#define COOKIE_USR_MAXSZ 50
 #endif
 
 typedef struct caslib_cookie_t caslib_cookie_t;
