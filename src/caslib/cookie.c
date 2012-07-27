@@ -111,9 +111,9 @@ int caslib_cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, siz
   int sz      = 1 + 1 + usz + 8;
   int tmp;
 
-  if (s < (size_t) sz)
-    return(-1);
-  else if (o != NULL) {
+  if (o == NULL)
+    return(sz);
+  else if (s >= (size_t) sz) {
     strncpy(username, c->username, (size_t) (usz - 1));
     username[usz] = '\0';
     tmp = __serialize_uint8(o, (int) s, CASLIB_COOKIE_VER); // + 1
