@@ -102,7 +102,7 @@ caslib_cookie_t *caslib_cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp
   return(NULL);
 }
 
-int caslib_cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) {
+int caslib_cookie_serialize(const caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) {
   CASLIB_UNUSED(sec);
 
   char username[COOKIE_USR_MAXSZ];

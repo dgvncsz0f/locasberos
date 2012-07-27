@@ -66,17 +66,17 @@ caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *, const char *sec, co
 
 /*! Serializes the cookie in binary format.
  *
- *  \param u The cookie you want to serialize.
- *
- *  \param o The variable that will receive the cookie.
+ *  \param c The cookie you want to serialize.
  *
  *  \param sec The secret to sign the message. You will need this to unserialize it later.
+ *
+ *  \param o The variable that will receive the cookie.
  *
  *  \param s The size of the o variable;
  *
  *  \return The s parameter or the minimum required size of o.
  */
-int caslib_cookie_serialize(caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s);
+int caslib_cookie_serialize(const caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s);
 
 /*! Frees all memory associated with the cookie structure.
  */
