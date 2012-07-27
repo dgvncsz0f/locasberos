@@ -52,9 +52,6 @@ int __serialize_uint8(uint8_t *out, int out_sz, uint8_t n) {
 
 static inline
 int __serialize_uint16(uint8_t *out, int out_sz, uint16_t n) {
-  if (out_sz < 2)
-    return(-1);
-
   out_sz = __serialize_uint8(out, out_sz, (uint8_t) (n & 0xFF));
   out_sz = __serialize_uint8(out+1, out_sz, (uint8_t) ((n >> 8) & 0xFF));
   return(out_sz);
@@ -75,12 +72,12 @@ int __serialize_uint64(uint8_t *out, int out_sz, uint64_t n) {
 }
 
 static inline
-int __serialize_string(uint8_t *out, int out_sz, const char *s, int sz) {
-  if (out_sz < (sz+1))
+int __serialize_string(uint8_t *out, int out_sz, const char *s) {
+  int l = (int) (strlen(s) + 1);
+  if (out_sz < l)
     return(-1);
-  memcpy(out, s, (size_t) sz);
-  out[sz] = '\0';
-  return(out_sz - (sz+1));
+  strcpy((char *) out, s);
+  return(out_sz - l);
 }
 
 caslib_cookie_t *caslib_cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
@@ -117,7 +114,7 @@ int caslib_cookie_serialize(const caslib_cookie_t *c, const char *sec, uint8_t *
     strncpy(username, c->username, (size_t) (usz - 1));
     username[usz] = '\0';
     tmp = __serialize_uint8(o, (int) s, CASLIB_COOKIE_VER); // + 1
-    tmp = __serialize_string(o+1, tmp, username, usz);      // + 1 + usz
+    tmp = __serialize_string(o+1, tmp, username);           // + 1 + usz
     tmp = __serialize_uint64(o+1+usz, tmp, c->timestamp);   // + 8
     tmp = ((int) s) - tmp;
     assert(sz == tmp);
