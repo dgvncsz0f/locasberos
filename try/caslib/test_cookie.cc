@@ -45,6 +45,20 @@ caslib_rsp_t *__cas_response(const caslib_t *cas) {
   return(rsp);
 }
 
+TEST(cookie_username_must_return_the_same_username_that_is_on_response) {
+  caslib_t *cas           = caslib_init(test_cookie_cas_endpoint.c_str());
+  caslib_rsp_t *rsp       = __cas_response(cas);
+  caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
+  char username[1024];
+
+  caslib_rsp_auth_username(rsp, username, 1024);
+  CHECK_EQUAL(username, caslib_cookie_username(cookie));
+
+  caslib_cookie_destroy(cas, cookie);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
 TEST(cookie_serialize_should_allow_NULL_pointers) {
   caslib_t *cas           = caslib_init(test_cookie_cas_endpoint.c_str());
   caslib_rsp_t *rsp       = __cas_response(cas);
@@ -53,8 +67,41 @@ TEST(cookie_serialize_should_allow_NULL_pointers) {
   int rc = caslib_cookie_serialize(cookie, "secret", NULL, 0);
   CHECK(rc > 0);
 
-  caslib_rsp_destroy(cas, rsp);
   caslib_cookie_destroy(cas, cookie);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(cookie_serialize_should_fail_if_buffer_is_not_large_enough) {
+  caslib_t *cas           = caslib_init(test_cookie_cas_endpoint.c_str());
+  caslib_rsp_t *rsp       = __cas_response(cas);
+  caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
+  uint8_t data[1024];
+
+  int rc = caslib_cookie_serialize(cookie, "secret", NULL, 0);
+  rc = caslib_cookie_serialize(cookie, "secret", data, rc-1);
+  CHECK_EQUAL(-1, rc);
+
+  caslib_cookie_destroy(cas, cookie);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(cookie_serialize_unserialize_should_fail_if_buffer_is_not_large_enough) {
+  caslib_t *cas            = caslib_init(test_cookie_cas_endpoint.c_str());
+  caslib_rsp_t *rsp        = __cas_response(cas);
+  caslib_cookie_t *cookie0 = caslib_cookie_init(cas, rsp);
+  caslib_cookie_t *cookie1 = NULL;
+  uint8_t data[1024];
+  int rc;
+
+  rc      = caslib_cookie_serialize(cookie0, "secret", data, 1024);
+  cookie1 = caslib_cookie_unserialize(cas, "secret", data, rc-1);
+
+  CHECK(NULL == cookie1);
+
+  caslib_cookie_destroy(cas, cookie0);
+  caslib_rsp_destroy(cas, rsp);
   caslib_destroy(cas);
 }
 
@@ -71,23 +118,8 @@ TEST(cookie_serialize_unserialize_should_be_noop) {
   CHECK_EQUAL(caslib_cookie_timestamp(cookie0), caslib_cookie_timestamp(cookie1));
   CHECK_EQUAL(caslib_cookie_username(cookie0), caslib_cookie_username(cookie1));
 
-  caslib_rsp_destroy(cas, rsp);
   caslib_cookie_destroy(cas, cookie0);
   caslib_cookie_destroy(cas, cookie1);
-  caslib_destroy(cas);
-}
-
-TEST(cookie_serialize_should_fail_if_buffer_is_not_large_enough) {
-  caslib_t *cas           = caslib_init(test_cookie_cas_endpoint.c_str());
-  caslib_rsp_t *rsp       = __cas_response(cas);
-  caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
-  uint8_t data[1024];
-
-  int rc = caslib_cookie_serialize(cookie, "secret", NULL, 0);
-  rc = caslib_cookie_serialize(cookie, "secret", data, rc-1);
-  CHECK_EQUAL(-1, rc);
-
   caslib_rsp_destroy(cas, rsp);
-  caslib_cookie_destroy(cas, cookie);
   caslib_destroy(cas);
 }
