@@ -141,3 +141,27 @@ TEST(cookie_unserialize_should_fail_if_secret_is_different) {
   caslib_rsp_destroy(cas, rsp);
   caslib_destroy(cas);
 }
+
+TEST(cookie_check_timestamp_should_return_1_if_has_not_yet_expired) {
+  caslib_t *cas           = caslib_init(test_cookie_cas_endpoint.c_str());
+  caslib_rsp_t *rsp       = __cas_response(cas);
+  caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
+
+  CHECK(caslib_cookie_check_timestamp(cookie, 60) == 1);
+
+  caslib_cookie_destroy(cas, cookie);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}
+
+TEST(cookie_check_timestamp_should_return_0_if_has_expired) {
+  caslib_t *cas           = caslib_init(test_cookie_cas_endpoint.c_str());
+  caslib_rsp_t *rsp       = __cas_response(cas);
+  caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
+
+  CHECK(caslib_cookie_check_timestamp(cookie, 0) == 0);
+
+  caslib_cookie_destroy(cas, cookie);
+  caslib_rsp_destroy(cas, rsp);
+  caslib_destroy(cas);
+}

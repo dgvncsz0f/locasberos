@@ -64,8 +64,22 @@ caslib_cookie_t *caslib_cookie_init(const caslib_t *, const caslib_rsp_t *r);
  */
 caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *, const char *sec, const uint8_t *s, size_t n);
 
+/*! Returns the username held by this cookie.
+ */
 const char *caslib_cookie_username(const caslib_cookie_t *cookie);
+
+/*! Returns the timestamp the cookie has been created.
+ */
 uint64_t caslib_cookie_timestamp(const caslib_cookie_t *cookie);
+
+/*! Checks the age of the cookie.
+ * 
+ * \param age Time in seconds.
+ * 
+ * \return 1 If cookie is younger than age.
+ *         0 If cookie has expired.
+ */
+int caslib_cookie_check_timestamp(const caslib_cookie_t *, unsigned int age);
 
 /*! Serializes the cookie in binary format.
  *

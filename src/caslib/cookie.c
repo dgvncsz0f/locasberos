@@ -164,16 +164,21 @@ int __unserialize_string(char *out, const uint8_t *data, int s) {
   return((int) n);
 }
 
-caslib_cookie_t *caslib_cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
+static inline
+uint64_t __now() {
   struct timeval tv;
   gettimeofday(&tv, NULL);
+  return((uint64_t) tv.tv_sec);
+}
+
+caslib_cookie_t *caslib_cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp) {
   caslib_cookie_t *cookie = caslib_alloca_alloc(cas, sizeof(caslib_cookie_t));
   CASLIB_GOTOIF(cookie==NULL, failure);
 
   size_t sz         = (size_t) caslib_rsp_auth_username(rsp, NULL, 0);
   cookie->username  = caslib_alloca_alloc(cas, sz);
   CASLIB_GOTOIF(cookie->username==NULL, failure);
-  cookie->timestamp = (uint64_t) tv.tv_sec;
+  cookie->timestamp = __now();
   caslib_rsp_auth_username(rsp, cookie->username, sz);
 
   return(cookie);
@@ -258,4 +263,11 @@ const char *caslib_cookie_username(const caslib_cookie_t *cookie) {
 inline
 uint64_t caslib_cookie_timestamp(const caslib_cookie_t *cookie) {
   return(cookie->timestamp);
+}
+
+int caslib_cookie_check_timestamp(const caslib_cookie_t *cookie, unsigned int age) {
+  uint64_t now  = __now();
+  uint64_t past = cookie->timestamp;
+  uint64_t diff = (now>past ? now - past : 0);
+  return((unsigned int) diff < age);
 }
