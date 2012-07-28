@@ -65,6 +65,7 @@
 
 typedef struct {
   int enabled;
+  int authoritative;
   char *cas_endpoint;
   char *cas_login_url;
   char *cas_srvvalidate_url;
@@ -89,6 +90,7 @@ void __caslib_logger_func(void *data, const char *file, int line, const char *fm
 static inline
 void __locasberos_init_cfg(mod_locasberos_t *cfg) {
   cfg->enabled             = -1;
+  cfg->authoritative       = 1;
   cfg->cas_endpoint        = NULL;
   cfg->cas_service         = NULL;
   cfg->cas_renew           = 0;
@@ -225,6 +227,11 @@ const command_rec locasberos_cmds[] = {
                (void *) APR_OFFSETOF(mod_locasberos_t, enabled),
                OR_AUTHCFG,
                "Enable/Disable the module"),
+  AP_INIT_FLAG("LocasberosAuthoritative",
+               ap_set_flag_slot,
+               (void *) APR_OFFSETOF(mod_locasberos_t, enabled),
+               OR_AUTHCFG,
+               "Authoritative mode will deny access when authentication fails"),
   AP_INIT_TAKE1("LocasberosEndpoint",
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_endpoint),
@@ -232,7 +239,7 @@ const command_rec locasberos_cmds[] = {
                 "Define the CAS endpoint to use"),
   AP_INIT_TAKE1("LocasberosLoginUrl",
                 ap_set_string_slot,
-                (void *) APR_OFFSETOF(mod_locasberos_t, cas_login_url),
+                (void *) APR_OFFSETOF(mod_locasberos_t, authoritative),
                 OR_AUTHCFG,
                 "The CAS service validate URL to use"),
   AP_INIT_TAKE1("LocasberosServiceValidateUrl",
