@@ -109,15 +109,6 @@ void *__locasberos_cfg_new_dir(apr_pool_t *pool, char *d) {
 }
 
 static
-void *__locasberos_cfg_merge_dir(apr_pool_t *pool, void *base_raw, void *add_raw) {
-  mod_locasberos_t *base  = (mod_locasberos_t *) base_raw;
-  mod_locasberos_t *add   = (mod_locasberos_t *) add_raw;
-  mod_locasberos_t *merge = (mod_locasberos_t *) apr_palloc(pool, sizeof(mod_locasberos_t));
-  
-  return(cfg);
-}
-
-static
 apr_hash_t *__parse_query_string(apr_pool_t *pool, const char *args0) {
     apr_hash_t *query = apr_hash_make(pool);
     CASLIB_GOTOIF(args0==NULL, terminate);
@@ -234,47 +225,47 @@ const command_rec locasberos_cmds[] = {
                (void *) APR_OFFSETOF(mod_locasberos_t, enabled),
                OR_AUTHCFG,
                "Enable/Disable the module"),
-  AP_INIT_TAKE1("CasEndpoint",
+  AP_INIT_TAKE1("LocasberosEndpoint",
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_endpoint),
                 OR_AUTHCFG,
                 "Define the CAS endpoint to use"),
-  AP_INIT_TAKE1("CasLoginUrl",
+  AP_INIT_TAKE1("LocasberosLoginUrl",
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_login_url),
                 OR_AUTHCFG,
                 "The CAS service validate URL to use"),
-  AP_INIT_TAKE1("CasServiceValidateUrl",
+  AP_INIT_TAKE1("LocasberosServiceValidateUrl",
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_srvvalidate_url),
                 OR_AUTHCFG,
                 "The CAS service validate URL to use"),
-  AP_INIT_TAKE1("CasCookieName",
+  AP_INIT_TAKE1("LocasberosCookieName",
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cookie_name),
                 OR_AUTHCFG,
                 "Define the cookie name to use"),
-  AP_INIT_TAKE1("CasCookieTimeout",
+  AP_INIT_TAKE1("LocasberosCookieTimeout",
                 ap_set_int_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cookie_timeout),
                 OR_AUTHCFG,
                 "Define the cookie expiration (in seconds)"),
-  AP_INIT_TAKE1("CasCookiePath",
+  AP_INIT_TAKE1("LocasberosCookiePath",
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cookie_path),
                 OR_AUTHCFG,
                 "Define the cookie path to use when issuing/validating the cookie"),
-  AP_INIT_TAKE1("CasService",
+  AP_INIT_TAKE1("LocasberosService",
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_service),
                 OR_AUTHCFG,
                 "Define the CAS service to use when validating the service ticket"),
-  AP_INIT_FLAG("CasRenew",
+  AP_INIT_FLAG("LocasberosRenew",
                 ap_set_flag_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_renew),
                 OR_AUTHCFG,
                 "Define whether or not setting the renew flag when redirecting to loginUrl or validating the service ticket"),
-  AP_INIT_FLAG("CasGateway",
+  AP_INIT_FLAG("LocasberosGateway",
                ap_set_flag_slot,
                (void *) APR_OFFSETOF(mod_locasberos_t, cas_gateway),
                OR_AUTHCFG,
