@@ -88,25 +88,25 @@ void __caslib_logger_func(void *data, const char *file, int line, const char *fm
 }
 
 static inline
-void __locasberos_init_cfg(mod_locasberos_t *cfg) {
+void __locasberos_init_cfg(apr_pool_t *pool, mod_locasberos_t *cfg) {
   cfg->enabled             = -1;
   cfg->authoritative       = 1;
   cfg->cas_endpoint        = NULL;
   cfg->cas_service         = NULL;
   cfg->cas_renew           = 0;
   cfg->cas_gateway         = 0;
-  cfg->cas_login_url       = "/login";
-  cfg->cas_srvvalidate_url = "/serviceValidate";
-  cfg->cookie_name         = "locasberos";
+  cfg->cas_login_url       = apr_pstrdup(pool, "/login");
+  cfg->cas_srvvalidate_url = apr_pstrdup(pool, "/serviceValidate");
+  cfg->cookie_name         = apr_pstrdup(pool, "locasberos");
   cfg->cookie_timeout      = 60;
-  cfg->cookie_path         = "/";
+  cfg->cookie_path         = apr_pstrdup(pool, "/");
 }
 
 static
 void *__locasberos_cfg_new_dir(apr_pool_t *pool, char *d) {
   mod_locasberos_t *cfg = apr_palloc(pool, sizeof(mod_locasberos_t));
   if (cfg != NULL)
-    __locasberos_init_cfg(cfg);
+    __locasberos_init_cfg(pool, cfg);
   return(cfg);
 }
 
