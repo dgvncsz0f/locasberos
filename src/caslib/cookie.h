@@ -40,9 +40,6 @@
 
 typedef struct caslib_cookie_t caslib_cookie_t;
 
-// TODO: cookie_check_signature
-// TODO: cookie_check_timestamp
-
 /*! Creates a new cookie from a successfull caslib response. It is
  *  currently undefined to invoke this function with a message other
  *  than success.
