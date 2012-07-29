@@ -139,7 +139,7 @@ void caslib_destroy(caslib_t *);
 
 /*! Free memory used by a given response_t structure.
  */
-void caslib_rsp_destroy(caslib_t *, caslib_rsp_t *);
+void caslib_rsp_destroy(const caslib_t *, caslib_rsp_t *);
 
 void *caslib_alloca_alloc(const caslib_t *, size_t);
 void *caslib_alloca_realloc(const caslib_t *, void *, size_t);

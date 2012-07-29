@@ -343,7 +343,7 @@ void caslib_destroy(caslib_t *p) {
   CASLIB_DESTROY_F(p->alloca, p);
 }
 
-void caslib_rsp_destroy(caslib_t *c, caslib_rsp_t *p) {
+void caslib_rsp_destroy(const caslib_t *c, caslib_rsp_t *p) {
   if (p == NULL)
     return;
   xmlFreeDoc(p->xml);
