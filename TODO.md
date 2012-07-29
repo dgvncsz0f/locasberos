@@ -19,7 +19,7 @@
     * [X] use caslib to validate service ticket
     * [X] CASService: defines reasonable default
     * [ ] /login redirect
-    * [ ] emit cookie whenever authentication succeeds
+    * [X] emit cookie whenever authentication succeeds
     * [ ] validate cookie
     * [ ] inject cas information into the request (username, attributes etc.)
     * [ ] sanity check to avoid header injection
