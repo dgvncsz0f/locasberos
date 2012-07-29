@@ -42,11 +42,13 @@
 #include "apr_strings.h"
 #include "apr_pools.h"
 #include "apr_hash.h"
+#include "apr_tables.h"
 #include "apr_lib.h"
 
 #include "mod_locasberos.h"
 #include "caslib/misc.h"
 #include "caslib/caslib.h"
+#include "caslib/cookie.h"
 
 #define ML_SELECT_IF_PTRDEF(a, b, m) (a->m==NULL ? b->m : a->m)
 #define ML_SELECT_IF_INTDEF(a, b, m) (a->m==-1 ? b->m : a ->m)
@@ -152,6 +154,48 @@ char *__request_uri(request_rec *r) {
                      NULL));
 }
 
+static inline
+int __handle_auth_failure(request_rec *r) {
+  mod_locasberos_t *cfg = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
+  if (cfg->authoritative) {
+    return(HTTP_FORBIDDEN);
+  } else {
+    ML_LOGDEBUG(r, "we are not the authoritative one, declining: %s", r->uri);
+    return(DECLINED);
+  }
+}
+
+static
+int __handle_auth_success(request_rec *r, const caslib_t *cas, const caslib_rsp_t *rsp) {
+  int status              = HTTP_INTERNAL_SERVER_ERROR;
+  char secret[]           = "TODO:fixme";
+  mod_locasberos_t *cfg   = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
+  caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
+  CASLIB_GOTOIF(cookie==NULL, failure);
+  int bincookiesz         = caslib_cookie_serialize(cookie, secret, NULL, 0);
+  uint8_t *bincookie      = apr_palloc(r->pool, bincookiesz);
+  CASLIB_GOTOIF(bincookie==NULL, failure);
+  char *b64cookie         = apr_palloc(r->pool, apr_base64_encode_len(bincookiesz));
+  char *headerstr         = NULL;
+  CASLIB_GOTOIF(b64cookie==NULL, failure);
+
+  caslib_cookie_serialize(cookie, secret, bincookie, bincookiesz);
+  apr_base64_encode_binary(b64cookie, bincookie, bincookiesz);
+
+  headerstr = apr_psprintf(r->pool, 
+                           "%s=%s; Path=%s; HttpOnly",
+                           cfg->cookie_name,
+                           b64cookie,
+                           cfg->cookie_path);
+
+  apr_table_add(r->headers_out, "Set-Cookie", headerstr);
+  status = OK;
+
+ failure:
+  caslib_alloca_destroy(cas, cookie);
+  return(status);
+}
+
 static
 int __locasberos_authenticate(request_rec *r) {
   if (! ap_is_initial_req(r))
@@ -185,7 +229,7 @@ int __locasberos_authenticate(request_rec *r) {
   }
 
   if (cfg->cas_endpoint == NULL) {
-    ML_LOGERROR(r, "CASEndpoint missing: %s", r->uri);
+    ML_LOGERROR(r, "LocasberosEndpoint missing: %s", r->uri);
     return(HTTP_INTERNAL_SERVER_ERROR);
   }
 
@@ -200,9 +244,9 @@ int __locasberos_authenticate(request_rec *r) {
 
   if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
     ML_LOGDEBUG(r, "cas authentication failure: %s", r->uri);
-    status = HTTP_FORBIDDEN;
+    status = __handle_auth_failure(r);
   } else {
-    status  = OK;
+    status  = __handle_auth_success(r, cas, rsp);
     usersz  = caslib_rsp_auth_username(rsp, NULL, 0);
     r->user = apr_palloc(r->pool, usersz);
     caslib_rsp_auth_username(rsp, r->user, usersz);
