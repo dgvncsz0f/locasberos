@@ -104,7 +104,7 @@ void __locasberos_init_cfg(apr_pool_t *pool, mod_locasberos_t *cfg) {
   cfg->cas_login_url       = apr_pstrdup(pool, "/login");
   cfg->cas_srvvalidate_url = apr_pstrdup(pool, "/serviceValidate");
   cfg->cookie_name         = apr_pstrdup(pool, "locasberos");
-  cfg->cookie_timeout      = 60;
+  cfg->cookie_timeout      = 28800;
   cfg->cookie_path         = apr_pstrdup(pool, "/");
 }
 
