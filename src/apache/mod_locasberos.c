@@ -80,6 +80,12 @@ typedef struct {
   int cas_gateway;
 } mod_locasberos_t;
 
+#ifdef LOCASBEROS_NOTES_COOKIE_KEY
+#undef LOCASBEROS_NOTES_COOKIE_KEY
+#endif
+
+#define LOCASBEROS_NOTES_COOKIE_KEY "locasbers_cookie"
+
 static
 void __caslib_logger_func(void *data, const char *file, int line, const char *fmt, ...) {
   CASLIB_UNUSED(file);
@@ -247,6 +253,7 @@ int __handle_auth_success(request_rec *r, const caslib_t *cas, const caslib_rsp_
                            cookie,
                            cfg->cookie_path);
   apr_table_add(r->headers_out, "Set-Cookie", headerstr);
+  apr_table_add(r->err_headers_out, "Set-Cookie", headerstr);
   status = OK;
 
  failure:
