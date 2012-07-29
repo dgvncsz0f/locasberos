@@ -10,17 +10,18 @@
   * [ ] Acceptance tests using real CAS server
 
   * [ ] Refactor apache/nginx tests:
-
     * [ ] Identify tests specifics to each module
+    * [ ] Use DSL to configure webservers
 
-    * [ ] Use DSL to configure webservers;
+  * [ ] implement cookie_serialize/unserialize signature verification
 
   * [-] Implement locasberos authentication function
     * [X] use caslib to validate service ticket
     * [X] CASService: defines reasonable default
     * [ ] /login redirect
+    * [ ] add LocasberosCookieSecret config option
     * [X] emit cookie whenever authentication succeeds
-    * [ ] validate cookie
+    * [X] validate cookie
     * [ ] inject cas information into the request (username, attributes etc.)
     * [ ] sanity check to avoid header injection
     * [ ] cookie_serialize needs a portable binary format
