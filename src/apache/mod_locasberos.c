@@ -176,16 +176,27 @@ int __handle_auth_failure(request_rec *r) {
   }
 }
 
+static inline
+const char *__find_cas_cookie_in_notes(request_rec *r) {
+  const char *cookie = NULL;
+  if (r->main != NULL)
+    cookie = apr_table_get(r->main->notes, LOCASBEROS_NOTES_COOKIE_KEY);
+  if (cookie == NULL)
+    cookie = apr_table_get(r->notes, LOCASBEROS_NOTES_COOKIE_KEY);
+  return(cookie);
+}
+
 static
 const char *__find_cas_cookie(request_rec *r, const char *name) {
-  char *cookie   = NULL;
+  const char *cookie = __find_cas_cookie_in_notes(r);
+  CASLIB_GOTOIF(cookie!=NULL, terminate);
   char *cookies0 = (char *) apr_table_get(r->headers_in, "Cookie");
   char *cookies  = apr_pstrdup(r->pool, (cookies0!=NULL ? cookies0 : ""));
-  CASLIB_GOTOIF(cookies==NULL, failure);
+  CASLIB_GOTOIF(cookies==NULL, terminate);
   char *ctx      = NULL;
   char *val      = NULL;
   char *token    = apr_strtok(cookies, ";", &ctx);
-  
+
   for (; token!=NULL; token=apr_strtok(NULL, "&", &ctx)) {
     val = strchr(token, '=');
     if (val != NULL) {
@@ -199,7 +210,7 @@ const char *__find_cas_cookie(request_rec *r, const char *name) {
     }
   }
 
- failure:
+ terminate:
   return(cookie);
 }
 
@@ -252,8 +263,11 @@ int __handle_auth_success(request_rec *r, const caslib_t *cas, const caslib_rsp_
                            cfg->cookie_name,
                            cookie,
                            cfg->cookie_path);
+
+  ML_LOGDEBUG(r, "emitting new locasberos cookie: %s", r->uri);
   apr_table_add(r->headers_out, "Set-Cookie", headerstr);
   apr_table_add(r->err_headers_out, "Set-Cookie", headerstr);
+  apr_table_set(r->notes, LOCASBEROS_NOTES_COOKIE_KEY, cookie);
   status = OK;
 
  failure:
@@ -275,6 +289,9 @@ int __perform_cookie_authentication(request_rec *r, const caslib_t *cas) {
   if (caslib_cookie_check_timestamp(cookie, cfg->cookie_timeout)) {
     r->user = apr_pstrdup(r->pool, caslib_cookie_username(cookie));
     status  = OK;
+    ML_LOGDEBUG(r, "cas authentication success (cookie found): user=%s, %s", r->user, r->uri);
+  } else {
+    ML_LOGDEBUG(r, "invalid cookie has been found: %s", r->uri);
   }
 
  failure:
@@ -352,7 +369,6 @@ int __locasberos_authenticate(request_rec *r) {
     status = __perform_cas_authentication(r, cas);
 
   caslib_destroy(cas);
-
   return(status);
 
  failure:
