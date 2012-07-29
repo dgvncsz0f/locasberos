@@ -37,7 +37,7 @@ describe :locasberosenabled_flag do
       config = webserver.new
       config.enabled = "Off"
       config.run do
-        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
+        response = HTTParty.get(config.url_for("/index.txt"))
         # N.B.: when all auth modules decline, apache issues a internal
         #       server error response.
         response.code.should == 500
@@ -45,7 +45,7 @@ describe :locasberosenabled_flag do
 
       config.enabled = "On"
       config.run do
-        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
+        response = HTTParty.get(config.url_for("/index.txt"))
         response.code.should == 403
       end
     end

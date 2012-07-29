@@ -37,7 +37,7 @@ describe :casendpoint_flag do
       config = webserver.new
       config.endpoint = nil
       config.run do
-        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
+        response = HTTParty.get(config.url_for("/index.txt"))
         response.code.should == 500
       end
     end

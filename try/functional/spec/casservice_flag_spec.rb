@@ -37,7 +37,7 @@ describe :casservice_flag do
       config = webserver.new
       config.cas_service = nil
       config.run do
-        response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=FOO"))
+        response = HTTParty.get(config.url_for("/index.txt?ticket=FOO"))
         response.code.should == 403
       end
     end

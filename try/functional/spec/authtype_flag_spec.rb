@@ -49,7 +49,7 @@ describe :authtype_flag do
       config = webserver.new
       config.endpoint = "http://localhost"
       config.run do
-        response = HTTParty.get(config.url_for("/index.txt"))
+        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
         response.code.should == 403
       end
     end

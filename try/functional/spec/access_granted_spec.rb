@@ -37,7 +37,7 @@ describe :access_granted do
       config = webserver.new
       config.endpoint = config.url_for_fixture("/auth_success")
       config.run do
-        response = AuthBasicHTTP.get(config.url_for("/index.txt?ticket=UNDEFINED"))
+        response = HTTParty.get(config.url_for("/index.txt?ticket=UNDEFINED"))
         response.code.should == 200
       end
     end
