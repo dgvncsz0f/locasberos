@@ -44,6 +44,7 @@
 #include "apr_hash.h"
 #include "apr_tables.h"
 #include "apr_lib.h"
+#include "apr_base64.h"
 
 #include "mod_locasberos.h"
 #include "caslib/misc.h"
@@ -81,6 +82,9 @@ typedef struct {
 
 static
 void __caslib_logger_func(void *data, const char *file, int line, const char *fmt, ...) {
+  CASLIB_UNUSED(file);
+  CASLIB_UNUSED(line);
+
   char msg[LOCASBEROS_MAXLOGSZ];
   va_list args;
   va_start(args, fmt);
@@ -106,6 +110,7 @@ void __locasberos_init_cfg(apr_pool_t *pool, mod_locasberos_t *cfg) {
 
 static
 void *__locasberos_cfg_new_dir(apr_pool_t *pool, char *d) {
+  CASLIB_UNUSED(d);
   mod_locasberos_t *cfg = apr_palloc(pool, sizeof(mod_locasberos_t));
   if (cfg != NULL)
     __locasberos_init_cfg(pool, cfg);
@@ -166,33 +171,43 @@ int __handle_auth_failure(request_rec *r) {
 }
 
 static
-int __handle_auth_success(request_rec *r, const caslib_t *cas, const caslib_rsp_t *rsp) {
-  int status              = HTTP_INTERNAL_SERVER_ERROR;
+char *__encode_cookie(request_rec *r, const caslib_t *cas, const caslib_rsp_t *rsp) {
   char secret[]           = "TODO:fixme";
-  mod_locasberos_t *cfg   = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
+  char *b64cookie         = NULL;
   caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
   CASLIB_GOTOIF(cookie==NULL, failure);
   int bincookiesz         = caslib_cookie_serialize(cookie, secret, NULL, 0);
   uint8_t *bincookie      = apr_palloc(r->pool, bincookiesz);
   CASLIB_GOTOIF(bincookie==NULL, failure);
-  char *b64cookie         = apr_palloc(r->pool, apr_base64_encode_len(bincookiesz));
-  char *headerstr         = NULL;
+
+  b64cookie = apr_palloc(r->pool, apr_base64_encode_len(bincookiesz));
   CASLIB_GOTOIF(b64cookie==NULL, failure);
 
   caslib_cookie_serialize(cookie, secret, bincookie, bincookiesz);
   apr_base64_encode_binary(b64cookie, bincookie, bincookiesz);
 
+ failure:
+  caslib_alloca_destroy(cas, cookie);
+  return(b64cookie);
+}
+
+static
+int __handle_auth_success(request_rec *r, const caslib_t *cas, const caslib_rsp_t *rsp) {
+  int status              = HTTP_INTERNAL_SERVER_ERROR;
+  mod_locasberos_t *cfg   = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
+  char *headerstr         = NULL;
+  char *cookie            = __encode_cookie(r, cas, rsp);
+  CASLIB_GOTOIF(cookie==NULL, failure);
+
   headerstr = apr_psprintf(r->pool, 
                            "%s=%s; Path=%s; HttpOnly",
                            cfg->cookie_name,
-                           b64cookie,
+                           cookie,
                            cfg->cookie_path);
-
   apr_table_add(r->headers_out, "Set-Cookie", headerstr);
   status = OK;
 
  failure:
-  caslib_alloca_destroy(cas, cookie);
   return(status);
 }
 
