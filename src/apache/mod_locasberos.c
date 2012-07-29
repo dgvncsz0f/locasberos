@@ -171,6 +171,48 @@ int __handle_auth_failure(request_rec *r) {
 }
 
 static
+const char *__find_cas_cookie(request_rec *r, const char *name) {
+  char *cookie   = NULL;
+  char *cookies0 = (char *) apr_table_get(r->headers_in, "Cookie");
+  char *cookies  = apr_pstrdup(r->pool, (cookies0!=NULL ? cookies0 : ""));
+  CASLIB_GOTOIF(cookies==NULL, failure);
+  char *ctx      = NULL;
+  char *val      = NULL;
+  char *token    = apr_strtok(cookies, ";", &ctx);
+  
+  for (; token!=NULL; token=apr_strtok(NULL, "&", &ctx)) {
+    val = strchr(token, '=');
+    if (val != NULL) {
+      *val  = '\0';
+      val  += 1;
+    }
+
+    if (apr_strnatcasecmp(token, name) == 0) {
+      cookie = val;
+      break;
+    }
+  }
+
+ failure:
+  return(cookie);
+}
+
+static
+caslib_cookie_t *__decode_cookie(request_rec *r, const caslib_t *cas, const char *e_cookie) {
+  char secret[]            = "TODO:fixme";
+  caslib_cookie_t *cookie  = NULL;
+  int datasz               = apr_base64_decode_len(e_cookie);
+  uint8_t *data            = apr_palloc(r->pool, datasz);
+  CASLIB_GOTOIF(data==NULL, failure);
+  
+  apr_base64_decode_binary(data, e_cookie);
+  cookie = caslib_cookie_unserialize(cas, secret, data, datasz);
+
+ failure:
+  return(cookie);
+}
+
+static
 char *__encode_cookie(request_rec *r, const caslib_t *cas, const caslib_rsp_t *rsp) {
   char secret[]           = "TODO:fixme";
   char *b64cookie         = NULL;
@@ -212,20 +254,66 @@ int __handle_auth_success(request_rec *r, const caslib_t *cas, const caslib_rsp_
 }
 
 static
-int __locasberos_authenticate(request_rec *r) {
-  if (! ap_is_initial_req(r))
-    return(DECLINED);
+int __perform_cookie_authentication(request_rec *r, const caslib_t *cas) {
+  int status              = DECLINED;
+  mod_locasberos_t *cfg   = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
+  const char *e_cookie    = NULL;
+  caslib_cookie_t *cookie = NULL;
 
+  e_cookie = __find_cas_cookie(r, cfg->cookie_name);
+  CASLIB_GOTOIF(e_cookie==NULL, failure);
+  cookie = __decode_cookie(r, cas, e_cookie);
+  CASLIB_GOTOIF(cookie==NULL, failure);
+
+  if (caslib_cookie_check_timestamp(cookie, cfg->cookie_timeout)) {
+    r->user = apr_pstrdup(r->pool, caslib_cookie_username(cookie));
+    status  = OK;
+  }
+
+ failure:
+  caslib_alloca_destroy(cas, cookie);
+  return(status);
+}
+
+static
+int __perform_cas_authentication(request_rec *r, const caslib_t *cas) {
   mod_locasberos_t *cfg = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
-  const char *auth_type = ap_auth_type(r);
   apr_hash_t *args      = (r->args==NULL ? NULL : __parse_query_string(r->pool, r->args));
   const char *ticket    = (args==NULL ? NULL : apr_hash_get(args, "ticket", APR_HASH_KEY_STRING));
   const char *service   = ML_GET_PTRVAL(cfg->cas_service, __request_uri(r));
-  caslib_t *cas         = NULL;
   caslib_rsp_t *rsp     = NULL;
-  logger_t logger;
   int status            = DECLINED;
   int usersz            = -1;
+
+  if (ticket != NULL) {
+    rsp = caslib_service_validate(cas, service, ticket, cfg->cas_renew);
+  } else {
+    ML_LOGDEBUG(r, "no ticket found: %s", r->uri);
+  }
+
+  if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
+    ML_LOGDEBUG(r, "cas authentication failure: %s", r->uri);
+    status = __handle_auth_failure(r);
+  } else {
+    status  = __handle_auth_success(r, cas, rsp);
+    usersz  = caslib_rsp_auth_username(rsp, NULL, 0);
+    r->user = apr_palloc(r->pool, usersz);
+    caslib_rsp_auth_username(rsp, r->user, usersz);
+    ML_LOGDEBUG(r, "cas authentication success: user=%s, %s", r->user, r->uri);
+  }
+
+  caslib_rsp_destroy(cas, rsp);
+
+  return(status);
+}
+
+static
+int __locasberos_authenticate(request_rec *r) {
+  mod_locasberos_t *cfg   = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
+  const char *auth_type   = ap_auth_type(r);
+  caslib_t *cas           = NULL;
+  int status              = DECLINED;
+  logger_t logger;
 
   logger.debug_f = __caslib_logger_func;
   logger.info_f  = __caslib_logger_func;
@@ -248,34 +336,19 @@ int __locasberos_authenticate(request_rec *r) {
     return(HTTP_INTERNAL_SERVER_ERROR);
   }
 
-  if (ticket != NULL) {
-    cas = caslib_init(cfg->cas_endpoint);
-    CASLIB_GOTOIF(cas==NULL, failure);
-    caslib_setopt_logging(cas, &logger);
-    rsp = caslib_service_validate(cas, service, ticket, cfg->cas_renew);
-  } else {
-    ML_LOGDEBUG(r, "no ticket found: %s", r->uri);
-  }
+  cas = caslib_init(cfg->cas_endpoint);
+  CASLIB_GOTOIF(cas==NULL, failure);
+  caslib_setopt_logging(cas, &logger);
 
-  if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
-    ML_LOGDEBUG(r, "cas authentication failure: %s", r->uri);
-    status = __handle_auth_failure(r);
-  } else {
-    status  = __handle_auth_success(r, cas, rsp);
-    usersz  = caslib_rsp_auth_username(rsp, NULL, 0);
-    r->user = apr_palloc(r->pool, usersz);
-    caslib_rsp_auth_username(rsp, r->user, usersz);
-    ML_LOGDEBUG(r, "cas authentication success: user=%s, %s", r->user, r->uri);
-  }
+  status = __perform_cookie_authentication(r, cas);
+  if (status == DECLINED)
+    status = __perform_cas_authentication(r, cas);
 
-  if (cas != NULL)
-    caslib_rsp_destroy(cas, rsp);
   caslib_destroy(cas);
 
   return(status);
 
  failure:
-  ML_LOGERROR(r, "internal server error, aborting: %s", r->uri);
   return(HTTP_INTERNAL_SERVER_ERROR);
 }
 
