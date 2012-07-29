@@ -278,12 +278,12 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
 
   eservice = __uencode_r(cas, curl, "service", service);
   eticket  = __uencode_r(cas, curl, "ticket", ticket);
-  erenew   = __uencode_r(cas, curl, "renew", (renew ? "true" : "false"));
-  rc       = __joinparams(cas, NULL, 0, 3, eservice, eticket, erenew);
+  erenew   = __uencode_r(cas, curl, "renew", "true");
+  rc       = __joinparams(cas, NULL, 0, (renew ? 3 : 2), eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
   reqbdy   = CASLIB_ALLOC_F(cas->alloca, (size_t) rc);
   CASLIB_GOTOIF(reqbdy==NULL, failure);
-  rc       = __joinparams(cas, reqbdy, (size_t) rc, 3, eservice, eticket, erenew);
+  rc       = __joinparams(cas, reqbdy, (size_t) rc, (renew ? 3 : 2), eservice, eticket, erenew);
   CASLIB_GOTOIF(rc<0, failure);
   CASLIB_DEBUG(cas->logger, " along with the post fields: %s", reqbdy);
 
