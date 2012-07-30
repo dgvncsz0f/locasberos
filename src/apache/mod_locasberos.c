@@ -246,7 +246,7 @@ char *__encode_cookie(request_rec *r, const caslib_t *cas, const caslib_rsp_t *r
   apr_base64_encode_binary(b64cookie, bincookie, bincookiesz);
 
  failure:
-  caslib_alloca_destroy(cas, cookie);
+  caslib_cookie_destroy(cas, cookie);
   return(b64cookie);
 }
 
@@ -297,7 +297,7 @@ int __perform_cookie_authentication(request_rec *r, const caslib_t *cas) {
   }
 
  failure:
-  caslib_alloca_destroy(cas, cookie);
+  caslib_cookie_destroy(cas, cookie);
   return(status);
 }
 
