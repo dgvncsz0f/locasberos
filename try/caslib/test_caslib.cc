@@ -28,6 +28,7 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <UnitTest++.h>
+#include <cstring>
 #include "fixtures.hh"
 extern "C" {
 #include "caslib/misc.h"
@@ -180,4 +181,50 @@ TEST(caslib_rsp_auth_should_return_false_for_everything_else) {
   CHECK_EQUAL(false, caslib_rsp_auth_success(rsp));
   caslib_rsp_destroy(cas, rsp);
   caslib_destroy(cas);
+}
+
+static inline
+void __test_loginurl_with(const std::string &expected, const char *service, bool renew, bool gateway) {
+  caslib_t *cas  = caslib_init("http://localhost");
+  char out[1024];
+  int rc;
+
+  rc = caslib_login_url(cas, out, 1024, service, renew, gateway);
+  CHECK_EQUAL(expected, out);
+  CHECK_EQUAL(expected.size()+1, caslib_login_url(cas, NULL, 0, service, renew, gateway));
+  CHECK_EQUAL(expected.size()+1, rc);
+
+  caslib_destroy(cas);
+}
+
+TEST(caslib_login_url_with_no_params) {
+  __test_loginurl_with("http://localhost/login", NULL, false, false);
+}
+
+TEST(caslib_login_url_with_renew) {
+  __test_loginurl_with("http://localhost/login?renew=true", NULL, true, false);
+}
+
+TEST(caslib_login_url_with_gateway) {
+  __test_loginurl_with("http://localhost/login?gateway=true", NULL, false, true);
+}
+
+TEST(caslib_login_url_with_renew_n_gateway) {
+  __test_loginurl_with("http://localhost/login?renew=true&gateway=true", NULL, true, true);
+}
+
+TEST(caslib_login_url_with_service) {
+  __test_loginurl_with("http://localhost/login?service=foobar", "foobar", false, false);
+}
+
+TEST(caslib_login_url_with_service_n_renew) {
+  __test_loginurl_with("http://localhost/login?service=foobar&renew=true", "foobar", true, false);
+}
+
+TEST(caslib_login_url_with_service_n_gateway) {
+  __test_loginurl_with("http://localhost/login?service=foobar&gateway=true", "foobar", false, true);
+}
+
+TEST(caslib_login_url_with_service_n_renew_n_gateway) {
+  __test_loginurl_with("http://localhost/login?service=foobar&renew=true&gateway=true", "foobar", true, true);
 }

@@ -64,6 +64,14 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *alloca);
  */
 void caslib_setopt_logging(caslib_t *cas, const logger_t *logger);
 
+/*! Build up the URL to authenticate the user.
+ *
+ * \param out The variable that will store the output (this might be NULL);
+ * 
+ * \param s The size of the out variable;
+ */
+int caslib_login_url(const caslib_t *cas, char *out, size_t s, const char *service, bool renew, bool gateway);
+
 /*! Checks the validity of a service ticket [1].
  *
  * \param service The identifier of the service for which the ticket

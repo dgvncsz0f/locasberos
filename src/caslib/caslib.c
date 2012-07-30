@@ -41,6 +41,7 @@
 struct caslib_t {
   char *endpoint;
   char *service_validate_url;
+  char *login_url;
   int timeout;
   alloca_t alloca;
   logger_t logger;
@@ -145,8 +146,9 @@ int __uencode(CURL *curl, char *dest, size_t sz, const char *key, const char *va
   CASLIB_GOTOIF(e_key==NULL || e_val==NULL, release);
 
   if (dest != NULL) {
-    snprintf(dest, sz, "%s=%s", e_key, e_val);
-    rc = (int) strlen(dest);
+    rc = snprintf(dest, sz, "%s=%s", e_key, e_val);
+    CASLIB_GOTOIF(rc<0, release);
+    rc += 1;
   } else {
     rc = (int) (2 + strlen(e_key) + strlen(e_val));
   }
@@ -211,6 +213,7 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
   CASLIB_GOTOIF(p==NULL, failure);
   p->endpoint             = NULL;
   p->service_validate_url = NULL;
+  p->login_url            = NULL;
   p->timeout              = 60;
   p->alloca.alloc_f       = ptr->alloc_f;
   p->alloca.destroy_f     = ptr->destroy_f;
@@ -229,6 +232,10 @@ caslib_t *caslib_init_with(const char *endpoint, const alloca_t *ptr) {
   CASLIB_GOTOIF(p->service_validate_url==NULL, failure);
   strcpy(p->service_validate_url, "/serviceValidate");
 
+  p->login_url = CASLIB_ALLOC_F_PTR(ptr, strlen("/login") + 1);
+  CASLIB_GOTOIF(p->login_url==NULL, failure);
+  strcpy(p->login_url, "/login");
+
   return(p);
 
  failure:
@@ -242,6 +249,61 @@ void caslib_setopt_logging(caslib_t *cas, const logger_t *logger) {
   cas->logger.warn_f  = logger->warn_f;
   cas->logger.error_f = logger->error_f;
   cas->logger.data    = logger->data;
+}
+
+int caslib_login_url(const caslib_t *cas, char *out, size_t s, const char *service, bool renew, bool gateway) {
+  int rc          = -1;
+  size_t tmp      = 0;
+  char *eservice  = NULL;
+  char sep        = '?';
+  CURL *curl      = curl_easy_init();
+  CASLIB_GOTOIF(curl==NULL, failure);
+  
+  eservice = __uencode_r(cas, curl, "service", (service==NULL ? "" : service));
+  CASLIB_GOTOIF(eservice==NULL, failure);
+
+  tmp = strlen(cas->endpoint) + strlen(cas->login_url);
+  if (service != NULL)
+    tmp += 1 + strlen(eservice);
+  if (renew)
+    tmp += 1 + strlen("renew=true");
+  if (gateway)
+    tmp += 1 + strlen("gateway=true");
+
+  if (out == NULL) {
+    rc = (int) (1+tmp);
+  } else if (s >= (1+tmp)) {
+    rc = snprintf(out, s, "%s%s", cas->endpoint, cas->login_url);
+    CASLIB_GOTOIF(rc<0, failure);
+    tmp = (size_t) rc;
+
+    if (service != NULL) {
+      rc = snprintf(out+tmp, s-tmp, "%c%s", sep, eservice);
+      CASLIB_GOTOIF(rc<0, failure);
+      tmp += (size_t) rc;
+      sep  = '&';
+    }
+
+    if (renew) {
+      rc = snprintf(out+tmp, s-tmp, "%c%s", sep, "renew=true");
+      CASLIB_GOTOIF(rc<0, failure);
+      tmp += (size_t) rc;
+      sep  = '&';
+    }
+
+    if (gateway) {
+      rc = snprintf(out+tmp, s-tmp, "%c%s", sep, "gateway=true");
+      CASLIB_GOTOIF(rc<0, failure);
+      tmp += (size_t) rc;
+    }
+
+    rc = (int) (1+tmp);
+  }
+
+ failure:
+  curl_easy_cleanup(curl);
+  CASLIB_DESTROY_F(cas->alloca, eservice);
+  return(rc);
 }
 
 caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, const char *ticket, bool renew) {
@@ -274,7 +336,6 @@ caslib_rsp_t *caslib_service_validate(const caslib_t *cas, const char *service, 
   rc  = snprintf(url, sz+1, "%s%s", cas->endpoint, cas->service_validate_url);
   CASLIB_GOTOIF(rc<0, failure);
   CASLIB_DEBUG(cas->logger, " using `%s' to validate service ticket", url);
-
 
   eservice = __uencode_r(cas, curl, "service", service);
   eticket  = __uencode_r(cas, curl, "ticket", ticket);
@@ -339,6 +400,7 @@ void caslib_destroy(caslib_t *p) {
   if (p == NULL)
     return;
   CASLIB_DESTROY_F(p->alloca, p->endpoint);
+  CASLIB_DESTROY_F(p->alloca, p->login_url);
   CASLIB_DESTROY_F(p->alloca, p->service_validate_url);
   CASLIB_DESTROY_F(p->alloca, p);
 }
