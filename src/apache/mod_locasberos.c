@@ -318,14 +318,14 @@ int __perform_cas_authentication(request_rec *r, const caslib_t *cas) {
   }
 
   if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
-    ML_LOGINFO(r, "cas authentication failure (srv ticket): %s", r->uri);
+    ML_LOGINFO(r, "cas authentication failure (ticket): %s", r->uri);
     status = __handle_auth_failure(r);
   } else {
     status  = __handle_auth_success(r, cas, rsp);
     usersz  = caslib_rsp_auth_username(rsp, NULL, 0);
     r->user = apr_palloc(r->pool, usersz);
     caslib_rsp_auth_username(rsp, r->user, usersz);
-    ML_LOGINFO(r, "cas authentication success (srv ticket): user=%s, %s", r->user, r->uri);
+    ML_LOGINFO(r, "cas authentication success (ticket): user=%s, %s", r->user, r->uri);
   }
 
   caslib_rsp_destroy(cas, rsp);
