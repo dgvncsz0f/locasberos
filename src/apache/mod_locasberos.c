@@ -289,9 +289,11 @@ int __perform_cookie_authentication(request_rec *r, const caslib_t *cas) {
   if (caslib_cookie_check_timestamp(cookie, cfg->cookie_timeout)) {
     r->user = apr_pstrdup(r->pool, caslib_cookie_username(cookie));
     status  = OK;
-    ML_LOGDEBUG(r, "cas authentication success (cookie found): user=%s, %s", r->user, r->uri);
-  } else {
-    ML_LOGDEBUG(r, "invalid cookie has been found: %s", r->uri);
+    ML_LOGINFO(r, "cas authentication success (cookie): user=%s, %s", r->user, r->uri);
+  }
+
+  if (status != OK) {
+    ML_LOGINFO(r, "cas authentication failure (cookie): %s", r->uri);
   }
 
  failure:
@@ -316,14 +318,14 @@ int __perform_cas_authentication(request_rec *r, const caslib_t *cas) {
   }
 
   if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
-    ML_LOGDEBUG(r, "cas authentication failure: %s", r->uri);
+    ML_LOGINFO(r, "cas authentication failure (srv ticket): %s", r->uri);
     status = __handle_auth_failure(r);
   } else {
     status  = __handle_auth_success(r, cas, rsp);
     usersz  = caslib_rsp_auth_username(rsp, NULL, 0);
     r->user = apr_palloc(r->pool, usersz);
     caslib_rsp_auth_username(rsp, r->user, usersz);
-    ML_LOGDEBUG(r, "cas authentication success: user=%s, %s", r->user, r->uri);
+    ML_LOGINFO(r, "cas authentication success (srv ticket): user=%s, %s", r->user, r->uri);
   }
 
   caslib_rsp_destroy(cas, rsp);
