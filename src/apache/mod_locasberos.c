@@ -152,6 +152,24 @@ apr_hash_t *__parse_query_string(apr_pool_t *pool, const char *args0) {
     return(query);
 }
 
+static inline
+char *__destroy_ticket_param(char *uri) {
+  size_t len;
+  char *sep    = NULL;
+  char *ticket = strstr(uri, "?ticket=");
+  if (ticket == NULL)
+    ticket = strstr(uri, "&ticket=");
+  if (ticket == NULL)
+    return(uri);
+
+  sep = strchr(ticket+1, '&');
+  len = (sep == NULL ? 0 : strlen(sep));
+  if (len > 0)
+    memmove(ticket+1, sep+1, len);
+  ticket[len] = '\0';
+  return(uri);
+}
+
 static
 char *__request_uri(request_rec *r) {
   return(apr_pstrcat(r->pool,
@@ -326,12 +344,16 @@ int __perform_cas_authentication(request_rec *r, const caslib_t *cas) {
   apr_hash_t *args      = (r->args==NULL ? NULL : __parse_query_string(r->pool, r->args));
   const char *ticket    = (args==NULL ? NULL : apr_hash_get(args, "ticket", APR_HASH_KEY_STRING));
   const char *service   = ML_GET_PTRVAL(cfg->cas_service, __request_uri(r));
+  char *rwservice       = NULL;
   caslib_rsp_t *rsp     = NULL;
-  int status            = DECLINED;
+  int status            = HTTP_INTERNAL_SERVER_ERROR;
   int usersz            = -1;
 
   if (ticket != NULL) {
-    rsp = caslib_service_validate(cas, service, ticket, cfg->cas_renew);
+    rwservice = apr_pstrdup(r->pool, service);
+    __destroy_ticket_param(rwservice);
+    rsp = caslib_service_validate(cas, rwservice, ticket, cfg->cas_renew);
+    CASLIB_GOTOIF(rsp==NULL, failure);
   } else {
     ML_LOGDEBUG(r, "no ticket found: %s", r->uri);
   }
@@ -350,6 +372,7 @@ int __perform_cas_authentication(request_rec *r, const caslib_t *cas) {
     status = __handle_auth_failure(r);
   }
 
+ failure:
   caslib_rsp_destroy(cas, rsp);
 
   return(status);
