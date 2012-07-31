@@ -160,7 +160,7 @@ char *__request_uri(request_rec *r) {
                      r->server->server_hostname,
                      apr_psprintf(r->pool, ":%u", r->server->port),
                      r->uri,
-                     (r->args != NULL ? "?" : ""),
+                     (r->args == NULL ? NULL : "?"),
                      r->args,
                      NULL));
 }
@@ -302,6 +302,25 @@ int __perform_cookie_authentication(request_rec *r, const caslib_t *cas) {
 }
 
 static
+int __login_redirect(request_rec *r, const caslib_t *cas) {
+  int status            = HTTP_INTERNAL_SERVER_ERROR;
+  mod_locasberos_t *cfg = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
+  const char *service   = ML_GET_PTRVAL(cfg->cas_service, __request_uri(r));
+  int sz                = caslib_login_url(cas, NULL, 0, service, cfg->cas_renew, cfg->cas_gateway);
+  CASLIB_GOTOIF(sz<0, failure);
+  char *login_url       = apr_palloc(r->pool, sz);
+  CASLIB_GOTOIF(login_url==NULL, failure);
+
+  caslib_login_url(cas, login_url, sz, service, cfg->cas_renew, cfg->cas_gateway);
+  apr_table_add(r->headers_out, "Location", login_url);
+  status = HTTP_MOVED_TEMPORARILY;
+  ML_LOGDEBUG(r, "sending redirect: %s: %s", login_url, service);
+
+ failure:
+  return(status);
+}
+
+static
 int __perform_cas_authentication(request_rec *r, const caslib_t *cas) {
   mod_locasberos_t *cfg = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
   apr_hash_t *args      = (r->args==NULL ? NULL : __parse_query_string(r->pool, r->args));
@@ -317,15 +336,18 @@ int __perform_cas_authentication(request_rec *r, const caslib_t *cas) {
     ML_LOGDEBUG(r, "no ticket found: %s", r->uri);
   }
 
-  if (rsp==NULL || !caslib_rsp_auth_success(rsp)) {
-    ML_LOGINFO(r, "cas authentication failure (ticket): %s", r->uri);
-    status = __handle_auth_failure(r);
-  } else {
+  if (rsp==NULL) {
+    ML_LOGINFO(r, "no ticket found, redirecting to login url: %s", r->uri);
+    status = __login_redirect(r, cas);
+  } else if (caslib_rsp_auth_success(rsp)) {
     status  = __handle_auth_success(r, cas, rsp);
     usersz  = caslib_rsp_auth_username(rsp, NULL, 0);
     r->user = apr_palloc(r->pool, usersz);
     caslib_rsp_auth_username(rsp, r->user, usersz);
     ML_LOGINFO(r, "cas authentication success (ticket): user=%s, %s", r->user, r->uri);
+  } else {
+    ML_LOGINFO(r, "cas authentication failure (ticket): %s", r->uri);
+    status = __handle_auth_failure(r);
   }
 
   caslib_rsp_destroy(cas, rsp);
@@ -398,7 +420,7 @@ const command_rec locasberos_cmds[] = {
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, authoritative),
                 OR_AUTHCFG,
-                "The CAS service validate URL to use"),
+                "The CAS login URL to use"),
   AP_INIT_TAKE1("LocasberosServiceValidateUrl",
                 ap_set_string_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cas_srvvalidate_url),
