@@ -24,6 +24,11 @@ API Stability
        * testing: somehow ready, but not yet ready for production;
        * unstable: do not use, untested, API changing very often;
 
+Version
+=======
+
+* $version 0.1.0+unstable$
+
 License
 =======
 

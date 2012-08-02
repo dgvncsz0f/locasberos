@@ -1,21 +1,62 @@
 #!/bin/sh
 
-read -p "major: " major
-read -p "minor: " minor
-read -p "patch: " patch
-read -p "build: " buildv
+bin_sed=${bin_sed:-/bin/sed}
 
-if [ -n "$buildv" ]
-then
-  build="+$buildv"
-else
-  build=""
-fi
-version="$major.$minor.$patch$build"
+major=$1
+minor=$2
+patch=$3
+build=$4
 
-echo "v$version"
+read_version() {
+  [ -z "$major" ] && read -p "major: " major
+  [ -z "$minor" ] && read -p "minor: " minor
+  [ -z "$build" ] && read -p "patch: " patch
+  [ -z "$build" ] && read -p "build: " build
+  if [ -n "$build" ]
+  then
+    build="+$build"
+  fi
+  version="$major.$minor.$patch$build"
+}
 
-cat >src/caslib/version.h <<ENDL
+print_usage() {
+  echo "[usage] version.sh [MAJOR [MINOR [PATCH [BUILD]]]]"
+}
+
+check_environ() {
+  test -z "$major" && {
+    print_usage
+    echo "major can not be blank" >&2
+    exit 1
+  }
+
+  test -z "$minor" && {
+    print_usage
+    echo "minor can not be blank" >&2
+    exit 1
+  }
+
+  test -z "$patch" && {
+    print_usage
+    echo "patch can not be blank" >&2
+    exit 1
+  }
+
+  test -x "$bin_sed" || {
+    echo "$bin_sed (sed) program not found or not executable" >&2
+    exit 1
+  }
+}
+
+update_version() {
+  echo " updating file: $1"
+  $bin_sed -i -r 's/\$version[^\$]*\$/\$version '"$version"'$/' "$1"
+  $bin_sed -i -r 's/^version\s*=\s*["'\''][0-9]+\.[0-9]+\.[0-9]+.*$/version = "'"$version"'"/' $1
+}
+
+write_hversion() {
+  echo " creating file: $1"
+  cat <<EOF >"$1"
 // vim: et:ts=8:sw=2:sts=2
 
 // Copyright (c) 2012 dgvncsz0f
@@ -61,4 +102,12 @@ cat >src/caslib/version.h <<ENDL
 
 #endif
 
-ENDL
+EOF
+}
+
+read_version
+check_environ
+echo "version: $version"
+update_version "README.rst"
+update_version "doc/source/conf.py"
+write_hversion "src/caslib/version.h"
