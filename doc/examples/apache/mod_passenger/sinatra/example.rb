@@ -5,5 +5,5 @@ require "sinatra"
 
 get "/" do
   u = request.env["REMOTE_USER"]
-  "Hey, #{u}!"
+  "Hey, #{u}! [from sinatra]"
 end
