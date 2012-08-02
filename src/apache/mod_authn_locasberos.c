@@ -172,11 +172,15 @@ char *__destroy_ticket_param(char *uri) {
 
 static
 char *__request_uri(request_rec *r) {
+  bool http_proto  = strcmp("http", ap_http_scheme(r))==0;
+  bool https_proto = strcmp("https", ap_http_scheme(r))==0;
+  int port         = r->server->port;
+  bool omit_port   = (port==0) || (http_proto && port==0) || (https_proto && port==443);
   return(apr_pstrcat(r->pool,
                      ap_http_scheme(r),
                      "://",
                      r->server->server_hostname,
-                     apr_psprintf(r->pool, ":%u", r->server->port),
+                     (omit_port ? "" : apr_psprintf(r->pool, ":%u", r->server->port)),
                      r->uri,
                      (r->args == NULL ? NULL : "?"),
                      r->args,
