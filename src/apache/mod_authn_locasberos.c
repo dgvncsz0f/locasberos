@@ -46,7 +46,7 @@
 #include "apr_lib.h"
 #include "apr_base64.h"
 
-#include "mod_locasberos.h"
+#include "mod_authn_locasberos.h"
 #include "caslib/misc.h"
 #include "caslib/caslib.h"
 #include "caslib/cookie.h"
