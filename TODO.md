@@ -18,7 +18,7 @@
   * [-] Implement locasberos authentication function
     * [X] use caslib to validate service ticket
     * [X] CASService: defines reasonable default
-    * [ ] /login redirect
+    * [X] /login redirect
     * [ ] add LocasberosCookieSecret config option
     * [X] emit cookie whenever authentication succeeds
     * [X] validate cookie
