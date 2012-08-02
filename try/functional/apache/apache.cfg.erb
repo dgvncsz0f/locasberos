@@ -24,7 +24,7 @@ HostnameLookups Off
 ErrorLog logs/error.log
 DocumentRoot www
 
-LoadModule locasberos_module <%= root %>/<%= libexecdir %>/mod_auth_locasberos.so
+LoadModule locasberos_module <%= root %>/<%= libexecdir %>/mod_authn_locasberos.so
 <Location /<%= page %>>
 	<%= display_key "LocasberosEnabled", enabled %>
 	<%= display_key "LocasberosEndpoint", endpoint %>
