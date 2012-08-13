@@ -66,7 +66,7 @@ static ngx_command_t locasberos_cmds[] = {
 };
 
 static ngx_int_t ngx_http_locasberos_init(ngx_conf_t *conf) {
-  return NGX_DECLINED;
+  return NGX_OK;
 };
 
 static void * ngx_http_locasberos_create_loc_conf(ngx_conf_t *cf) {
