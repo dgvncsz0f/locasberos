@@ -10,7 +10,7 @@ compile: $(G_OBJ_FILES)
 
 .PHONY: link
 link: LD        = g++
-link: LDFLAGS  += $(cfg_srcdir)/caslib/.libs/libcaslib_dbg.a -lUnitTest++ -lcurl -lxml2
+link: LDFLAGS  += $(cfg_srcdir)/caslib/.libs/libcaslib_dbg.a -lUnitTest++ -lcurl -lxml2 -lcrypto -lssl
 link: compile $(G_EXE_FILE)
 
 .PHONY: install

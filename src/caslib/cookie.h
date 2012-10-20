@@ -55,11 +55,13 @@ caslib_cookie_t *caslib_cookie_init(const caslib_t *, const caslib_rsp_t *r);
  * 
  * \param sec The secret that has been used to sign the serialized string
  *
+ * \param slen The size of the sec variable
+ *
  * \param s The cookie data.
  *
  * \return The cookie struct or NULL if something goes wrong.
  */
-caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *, const char *sec, const uint8_t *s, size_t n);
+caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *, const void *sec, size_t slen, const uint8_t *s, size_t n);
 
 /*! Returns the username held by this cookie.
  */
@@ -84,13 +86,15 @@ int caslib_cookie_check_timestamp(const caslib_cookie_t *, unsigned int age);
  *
  *  \param sec The secret to sign the message. You will need this to unserialize it later.
  *
+ *  \param slen The size of the sec variable
+ *
  *  \param o The variable that will receive the cookie.
  *
  *  \param s The size of the o variable;
  *
  *  \return The s parameter or the minimum required size of o.
  */
-int caslib_cookie_serialize(const caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s);
+int caslib_cookie_serialize(const caslib_cookie_t *c, const void *sec, size_t slen, uint8_t *o, size_t s);
 
 /*! Frees all memory associated with the cookie structure.
  */

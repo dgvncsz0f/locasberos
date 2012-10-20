@@ -64,7 +64,7 @@ TEST(cookie_serialize_should_allow_NULL_pointers) {
   caslib_rsp_t *rsp       = __cas_response(cas);
   caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
 
-  int rc = caslib_cookie_serialize(cookie, "secret", NULL, 0);
+  int rc = caslib_cookie_serialize(cookie, "secret", 6, NULL, 0);
   CHECK(rc > 0);
 
   caslib_cookie_destroy(cas, cookie);
@@ -78,8 +78,8 @@ TEST(cookie_serialize_should_fail_if_buffer_is_not_large_enough) {
   caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
   uint8_t data[1024];
 
-  int rc = caslib_cookie_serialize(cookie, "secret", NULL, 0);
-  rc = caslib_cookie_serialize(cookie, "secret", data, rc-1);
+  int rc = caslib_cookie_serialize(cookie, "secret", 6, NULL, 0);
+  rc = caslib_cookie_serialize(cookie, "secret", 6, data, rc-1);
   CHECK_EQUAL(-1, rc);
 
   caslib_cookie_destroy(cas, cookie);
@@ -95,8 +95,8 @@ TEST(cookie_serialize_unserialize_should_fail_if_buffer_is_not_large_enough) {
   uint8_t data[1024];
   int rc;
 
-  rc      = caslib_cookie_serialize(cookie0, "secret", data, 1024);
-  cookie1 = caslib_cookie_unserialize(cas, "secret", data, rc-1);
+  rc      = caslib_cookie_serialize(cookie0, "secret", 6, data, 1024);
+  cookie1 = caslib_cookie_unserialize(cas, "secret", 6, data, rc-1);
 
   CHECK(NULL == cookie1);
 
@@ -112,8 +112,8 @@ TEST(cookie_serialize_unserialize_should_be_noop) {
   caslib_cookie_t *cookie1 = NULL;
   uint8_t data[1024];
 
-  caslib_cookie_serialize(cookie0, "secret", data, 1024);
-  cookie1 = caslib_cookie_unserialize(cas, "secret", data, 1024);
+  caslib_cookie_serialize(cookie0, "secret", 6, data, 1024);
+  cookie1 = caslib_cookie_unserialize(cas, "secret", 6, data, 1024);
 
   CHECK_EQUAL(caslib_cookie_timestamp(cookie0), caslib_cookie_timestamp(cookie1));
   CHECK_EQUAL(caslib_cookie_username(cookie0), caslib_cookie_username(cookie1));
@@ -131,8 +131,8 @@ TEST(cookie_unserialize_should_fail_if_secret_is_different) {
   caslib_cookie_t *cookie1 = NULL;
   uint8_t data[1024];
 
-  caslib_cookie_serialize(cookie0, "secretA", data, 1024);
-  cookie1 = caslib_cookie_unserialize(cas, "secretO", data, 1024);
+  caslib_cookie_serialize(cookie0, "secretA", 7, data, 1024);
+  cookie1 = caslib_cookie_unserialize(cas, "secretO", 7, data, 1024);
 
   CHECK(NULL != cookie0);
   CHECK(NULL == cookie1);

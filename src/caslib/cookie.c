@@ -34,6 +34,7 @@
 #include <sys/time.h>
 #include "caslib/misc.h"
 #include "caslib/cookie.h"
+#include "caslib/signature.h"
 
 #define CASLIB_COOKIE_VER 1
 
@@ -188,7 +189,7 @@ caslib_cookie_t *caslib_cookie_init(const caslib_t *cas, const caslib_rsp_t *rsp
   return(NULL);
 }
 
-caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *cas, const char *sec, const uint8_t *o, size_t s) {
+caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *cas, const void *sec, size_t slen, const uint8_t *o, size_t s) {
   CASLIB_UNUSED(sec);
 
   int si                  = (int) s;
@@ -198,6 +199,7 @@ caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *cas, const char *sec,
   uint64_t timestamp      = 0;
   caslib_cookie_t *cookie = NULL;
   char *username          = NULL;
+  char sig0[SIGNATURE_SIZE], sig1[SIGNATURE_SIZE];
 
   username = caslib_alloca_alloc(cas, COOKIE_USR_MAXSZ);
   CASLIB_GOTOIF(username==NULL, failure);
@@ -214,6 +216,15 @@ caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *cas, const char *sec,
   of += tmp;
   CASLIB_GOTOIF(tmp==-1, failure);
 
+  tmp = caslib_signature(sig0, SIGNATURE_SIZE, sec, slen, o, of);
+  CASLIB_GOTOIF(tmp==-1, failure);
+
+  tmp = __unserialize_string(sig1, o+of, si-of);
+  of += tmp;
+  CASLIB_GOTOIF(tmp==-1, failure);
+  CASLIB_GOTOIF(strcmp(sig0, sig1) != 0, failure);
+
+
   cookie = caslib_alloca_alloc(cas, sizeof(caslib_cookie_t));
   CASLIB_GOTOIF(cookie==NULL, failure);
   cookie->username = username;
@@ -225,23 +236,26 @@ caslib_cookie_t *caslib_cookie_unserialize(const caslib_t *cas, const char *sec,
   return(NULL);
 }
 
-int caslib_cookie_serialize(const caslib_cookie_t *c, const char *sec, uint8_t *o, size_t s) {
-  CASLIB_UNUSED(sec);
-
+int caslib_cookie_serialize(const caslib_cookie_t *c, const void *sec, size_t slen, uint8_t *o, size_t s) {
   char username[COOKIE_USR_MAXSZ];
+  char sig[SIGNATURE_SIZE];
   size_t ulen = strlen(c->username) + 1;
   int usz     = CASLIB_MIN(COOKIE_USR_MAXSZ - 1, (int) ulen);
-  int sz      = 1 + usz + 8;
-  int tmp;
+  int sz      = 1 + usz + 8 + SIGNATURE_SIZE;
+  int tmp, tmp1;
 
   if (o == NULL)
     return(sz);
   else if (((int) s) >= sz) {
     strncpy(username, c->username, (size_t) usz);
     username[usz-1] = '\0';
-    tmp = __serialize_uint8(o, (int) s, CASLIB_COOKIE_VER); // + 1
-    tmp = __serialize_string(o+1, tmp, username);           // + usz
-    tmp = __serialize_uint64(o+1+usz, tmp, c->timestamp);   // + 8
+    tmp  = __serialize_uint8(o, (int) s, CASLIB_COOKIE_VER); // + 1
+    tmp  = __serialize_string(o+1, tmp, username);           // + usz
+    tmp  = __serialize_uint64(o+1+usz, tmp, c->timestamp);   // + 8
+    tmp1 = caslib_signature(sig, SIGNATURE_SIZE, sec, slen, o, sz - SIGNATURE_SIZE);
+    if (tmp1 != 0)
+      return(-1);
+    tmp = __serialize_string(o+1+usz+8, tmp, sig);
     tmp = ((int) s) - tmp;
     assert(sz == tmp);
     return(sz);
@@ -271,3 +285,4 @@ int caslib_cookie_check_timestamp(const caslib_cookie_t *cookie, unsigned int ag
   uint64_t diff = (now>past ? now - past : 0);
   return((unsigned int) diff < age);
 }
+
