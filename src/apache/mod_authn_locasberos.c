@@ -73,6 +73,7 @@ typedef struct {
   char *cas_login_url;
   char *cas_srvvalidate_url;
   char *cookie_name;
+  char *cookie_secret;
   unsigned int cookie_timeout;
   char *cookie_path;
   char *cas_service;
@@ -112,6 +113,7 @@ void __locasberos_init_cfg(apr_pool_t *pool, mod_locasberos_t *cfg) {
   cfg->cookie_name         = apr_pstrdup(pool, "locasberos");
   cfg->cookie_timeout      = 28800;
   cfg->cookie_path         = apr_pstrdup(pool, "/");
+  cfg->cookie_secret       = "all cretans are liars!";
 }
 
 static
@@ -238,14 +240,14 @@ const char *__find_cas_cookie(request_rec *r, const char *name) {
 
 static
 caslib_cookie_t *__decode_cookie(request_rec *r, const caslib_t *cas, const char *e_cookie) {
-  char secret[]            = "TODO:fixme";
+  mod_locasberos_t *cfg    = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
   caslib_cookie_t *cookie  = NULL;
   int datasz               = apr_base64_decode_len(e_cookie);
   uint8_t *data            = apr_palloc(r->pool, datasz);
   CASLIB_GOTOIF(data==NULL, failure);
   
   apr_base64_decode_binary(data, e_cookie);
-  cookie = caslib_cookie_unserialize(cas, secret, data, datasz);
+  cookie = caslib_cookie_unserialize(cas, cfg->cookie_secret, strlen(cfg->cookie_secret), data, datasz);
 
  failure:
   return(cookie);
@@ -253,18 +255,18 @@ caslib_cookie_t *__decode_cookie(request_rec *r, const caslib_t *cas, const char
 
 static
 char *__encode_cookie(request_rec *r, const caslib_t *cas, const caslib_rsp_t *rsp) {
-  char secret[]           = "TODO:fixme";
+  mod_locasberos_t *cfg   = (mod_locasberos_t *) ap_get_module_config(r->per_dir_config, &locasberos_module);
   char *b64cookie         = NULL;
   caslib_cookie_t *cookie = caslib_cookie_init(cas, rsp);
   CASLIB_GOTOIF(cookie==NULL, failure);
-  int bincookiesz         = caslib_cookie_serialize(cookie, secret, NULL, 0);
+  int bincookiesz         = caslib_cookie_serialize(cookie, cfg->cookie_secret, strlen(cfg->cookie_secret), NULL, 0);
   uint8_t *bincookie      = apr_palloc(r->pool, bincookiesz);
   CASLIB_GOTOIF(bincookie==NULL, failure);
 
   b64cookie = apr_palloc(r->pool, apr_base64_encode_len(bincookiesz));
   CASLIB_GOTOIF(b64cookie==NULL, failure);
 
-  caslib_cookie_serialize(cookie, secret, bincookie, bincookiesz);
+  caslib_cookie_serialize(cookie, cfg->cookie_secret, strlen(cfg->cookie_secret), bincookie, bincookiesz);
   apr_base64_encode_binary(b64cookie, bincookie, bincookiesz);
 
  failure:
@@ -458,6 +460,11 @@ const command_rec locasberos_cmds[] = {
                 (void *) APR_OFFSETOF(mod_locasberos_t, cookie_name),
                 OR_AUTHCFG,
                 "Define the cookie name to use"),
+  AP_INIT_TAKE1("LocasberosCookieSecret",
+                ap_set_string_slot,
+                (void *) APR_OFFSETOF(mod_locasberos_t, cookie_secret),
+                OR_AUTHCFG,
+                "Define the secret to sign and verify cookies."),
   AP_INIT_TAKE1("LocasberosCookieTimeout",
                 ap_set_int_slot,
                 (void *) APR_OFFSETOF(mod_locasberos_t, cookie_timeout),
