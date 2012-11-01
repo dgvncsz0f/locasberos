@@ -44,14 +44,5 @@ describe :authtype_flag do
         response.code.should == 200
       end
     end
-
-    it "must handle authentication when authtype = locasberos" do
-      config = webserver.new
-      config.endpoint = "http://localhost"
-      config.run do
-        response = AuthBasicHTTP.get(config.url_for("/index.txt"))
-        response.code.should == 403
-      end
-    end
   end
 end

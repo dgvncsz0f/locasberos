@@ -5,8 +5,8 @@
 *.log
 .libs/
 .bundle/
-doc/build/
-dist/
-try/caslib/try_caslib_dbg
-
-try/tmp
+/doc/build/
+/dist/
+/try/caslib/try_caslib_dbg
+/try/functional/vendor/
+/try/tmp
