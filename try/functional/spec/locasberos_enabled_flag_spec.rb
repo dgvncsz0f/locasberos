@@ -42,12 +42,6 @@ describe :locasberosenabled_flag do
         #       server error response.
         response.code.should == 500
       end
-
-      config.enabled = "On"
-      config.run do
-        response = HTTParty.get(config.url_for("/index.txt"))
-        response.code.should == 403
-      end
     end
   end
 end

@@ -51,8 +51,8 @@ class Apache < Locasberos
           " -k start" +
           " -C LogLevel\\ debug" +
           " -e error" +
-          " -f "+ server_root +"/apache.cfg" +
-          " -d "+ server_root
+          " -f " + server_root + "/apache.cfg" +
+          " -d " + server_root
     IO.popen(cmd) { Process.wait }
     25.times do
       begin
@@ -68,8 +68,8 @@ class Apache < Locasberos
   def apache_stop(server_root)
     cmd = $bin_httpd +
           " -k stop" +
-          " -f "+ server_root +"/apache.cfg" +
-          " -d "+ server_root +
+          " -f " + server_root + "/apache.cfg" +
+          " -d " + server_root +
           " 2>&1"
     IO.popen(cmd) { Process.wait }
     25.times do
