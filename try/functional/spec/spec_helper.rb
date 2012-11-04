@@ -48,12 +48,25 @@ end
 $bin_apxs    = find_x("/usr/sbin/apxs",  "/usr/bin/apxs", "/usr/sbin/apxs2", "/usr/bin/apxs2")
 $bin_httpd   = find_x("/usr/sbin/httpd", "/usr/bin/httpd", "/usr/sbin/apache2", "/usr/bin/apache2")
 
-WEBSERVERS = [
-  Apache #, Nginx
-]
 
-def cat(f)
-  File.open(f, "r") {|f| f.read}
+def webservers
+  ws = ENV['WEBSERVERS']
+  ws = "Apache" if ws.nil?
+
+  ws.split(',').inject([]) do |acc, w|
+    if Object.const_defined?(w)
+      acc << Object.const_get(w)
+    else
+      Object.const_missing(w)
+    end
+    acc
+  end
+end
+
+WEBSERVERS = webservers
+
+def cat(file)
+  File.open(file, "r") {|f| f.read}
 end
 
 def clean(server_root)
