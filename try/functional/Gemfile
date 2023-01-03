@@ -1,4 +1,4 @@
 source :rubygems
 
 gem "rspec"   , "~> 2.10.0"
-gem "httparty", "~> 0.8.3"
+gem "httparty", "~> 0.21.0"
